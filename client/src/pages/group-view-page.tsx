@@ -1,107 +1,79 @@
 import { useParams } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Form, Student, Group } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, UserPlus2 } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
+// Skill level rendering helper
 function renderSkillLevel(level: number): string {
   const stars = "★".repeat(level);
   const emptyStars = "☆".repeat(5 - level);
   return stars + emptyStars;
 }
 
-function calculateGroupFitness(group: Student[], newStudent: Student): number {
-  let fitness = 0;
-
-  // Gender balance
-  const genderCounts = group.reduce((acc: Record<string, number>, student) => {
-    acc[student.gender] = (acc[student.gender] || 0) + 1;
-    return acc;
-  }, {});
-  if (genderCounts[newStudent.gender] >= Math.ceil(group.length / 2)) {
-    fitness -= 2;
-  }
-
-  // Ethnic diversity
-  const ethnicityCounts = group.reduce((acc: Record<string, number>, student) => {
-    acc[student.ethnicity] = (acc[student.ethnicity] || 0) + 1;
-    return acc;
-  }, {});
-  if (ethnicityCounts[newStudent.ethnicity] >= Math.ceil(group.length / 3)) {
-    fitness -= 2;
-  }
-
-  // NUin uniqueness
-  if (group.some(student => student.nunStatus === newStudent.nunStatus && newStudent.nunStatus !== "N/A")) {
-    fitness -= 3;
-  }
-
-  // Skill complementarity
-  const existingSkills = group.reduce((acc: Record<string, number[]>, student) => {
-    Object.entries(student.skills as Record<string, number>).forEach(([skill, level]) => {
-      if (!acc[skill]) acc[skill] = [];
-      acc[skill].push(level);
-    });
-    return acc;
-  }, {});
-
-  Object.entries(newStudent.skills as Record<string, number>).forEach(([skill, level]) => {
-    const avgSkill = existingSkills[skill]
-      ? existingSkills[skill].reduce((a, b) => a + b, 0) / existingSkills[skill].length
-      : 0;
-    if (Math.abs(avgSkill - level) >= 2) {
-      fitness += 1; // Reward skill diversity
-    }
-  });
-
-  return fitness;
-}
-
-function findBestGroup(student: Student, groups: Student[][]): number {
-  let bestGroupIndex = 0;
-  let bestFitness = -Infinity;
-
-  groups.forEach((group, index) => {
-    const fitness = calculateGroupFitness(group, student);
-    if (fitness > bestFitness) {
-      bestFitness = fitness;
-      bestGroupIndex = index;
-    }
-  });
-
-  return bestGroupIndex;
-}
-
 export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
   const formId = parseInt(id);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  const { data: form, isLoading: formLoading } = useQuery<Form>({
+  // Data fetching with proper error handling
+  const { data: form, isLoading: formLoading, error: formError } = useQuery<Form>({
     queryKey: [`/api/forms/${formId}`],
     enabled: !isNaN(formId),
+    onError: () => {
+      console.error('Failed to fetch form data:', formError);
+      toast({
+        title: "Error",
+        description: "Failed to load form data. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
     queryKey: [`/api/forms/${formId}/students`],
     enabled: !isNaN(formId),
+    onSuccess: (data) => {
+      console.log(`Loaded ${data.length} student responses`);
+    }
   });
 
   const { data: groups = [], isLoading: groupsLoading } = useQuery<Group[]>({
     queryKey: [`/api/forms/${formId}/groups`],
-    enabled: !isNaN(formId),
+    enabled: !isNaN(formId)
   });
 
-  // Error handling for invalid form ID
+  const generateGroupsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest(
+        "POST",
+        `/api/forms/${formId}/groups/generate`,
+        { formId }
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
+      toast({
+        title: "Success",
+        description: "Groups have been generated successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to generate groups:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate groups. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Error state for invalid form ID
   if (isNaN(formId)) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -123,6 +95,7 @@ export default function GroupViewPage() {
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="py-8 text-center">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
               <p className="text-muted-foreground">Loading...</p>
             </CardContent>
           </Card>
@@ -131,7 +104,7 @@ export default function GroupViewPage() {
     );
   }
 
-  // Form not found
+  // Form not found state
   if (!form) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -146,59 +119,6 @@ export default function GroupViewPage() {
     );
   }
 
-  const generateGroupsMutation = useMutation({
-    mutationFn: async () => {
-      // Advanced group generation algorithm
-      const numGroups = Math.ceil(students.length / 4); // Aim for 4-5 students per group
-      const newGroups: Student[][] = Array.from({ length: numGroups }, () => []);
-
-      // Sort students by skill level (prioritize high skills)
-      const sortedStudents = [...students].sort((a, b) => {
-        const aSkills = Object.values(a.skills as Record<string, number>);
-        const bSkills = Object.values(b.skills as Record<string, number>);
-        const aHighSkills = aSkills.filter(skill => skill >= 4).length;
-        const bHighSkills = bSkills.filter(skill => skill >= 4).length;
-        return bHighSkills - aHighSkills;
-      });
-
-      // First pass: distribute students with high skills
-      const highSkilledStudents = sortedStudents.filter(student =>
-        Object.values(student.skills as Record<string, number>).some(skill => skill >= 4)
-      );
-
-      highSkilledStudents.forEach((student, index) => {
-        newGroups[index % numGroups].push(student);
-      });
-
-      // Second pass: distribute remaining students
-      const remainingStudents = sortedStudents.filter(student =>
-        !Object.values(student.skills as Record<string, number>).some(skill => skill >= 4)
-      );
-
-      remainingStudents.forEach(student => {
-        const bestGroupIndex = findBestGroup(student, newGroups);
-        newGroups[bestGroupIndex].push(student);
-      });
-
-      // Create groups in database
-      const createdGroups = [];
-      for (let i = 0; i < newGroups.length; i++) {
-        const group = {
-          formId,
-          name: `Group ${i + 1}`,
-          studentIds: newGroups[i].map(s => s.id),
-        };
-        const res = await apiRequest("POST", `/api/forms/${formId}/groups`, group);
-        createdGroups.push(await res.json());
-      }
-
-      return createdGroups;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
-    },
-  });
-
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
@@ -209,16 +129,14 @@ export default function GroupViewPage() {
               <p className="text-muted-foreground mt-2">{form.description}</p>
             )}
           </div>
-          <div className="flex gap-4">
-            <Button
-              variant="outline"
-              onClick={() => generateGroupsMutation.mutate()}
-              disabled={generateGroupsMutation.isPending || students.length === 0}
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Generate Groups
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => generateGroupsMutation.mutate()}
+            disabled={generateGroupsMutation.isPending || students.length === 0}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${generateGroupsMutation.isPending ? 'animate-spin' : ''}`} />
+            {generateGroupsMutation.isPending ? 'Generating...' : 'Generate Groups'}
+          </Button>
         </div>
 
         {students.length === 0 ? (
@@ -230,122 +148,79 @@ export default function GroupViewPage() {
               </p>
             </CardContent>
           </Card>
-        ) : groups.length === 0 ? (
+        ) : (
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Student Submissions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>NUID</TableHead>
-                      <TableHead>Major</TableHead>
-                      <TableHead>Skills</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students.map((student) => (
-                      <TableRow key={student.id}>
-                        <TableCell>{student.name}</TableCell>
-                        <TableCell>{student.nuid}</TableCell>
-                        <TableCell>{student.major}</TableCell>
-                        <TableCell>
-                          {Object.entries(student.skills as Record<string, number>).map(
-                            ([skill, level]) => (
-                              <div key={skill} className="text-sm">
-                                {skill}: {renderSkillLevel(level)}
-                              </div>
-                            )
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Generate Groups</CardTitle>
+                <CardTitle>Student Responses</CardTitle>
                 <CardDescription>
-                  Click the button below to automatically generate balanced student groups
+                  {students.length} students have submitted their responses
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button
-                  onClick={() => generateGroupsMutation.mutate()}
-                  disabled={generateGroupsMutation.isPending}
-                >
-                  {generateGroupsMutation.isPending ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Generate Groups
-                    </>
-                  )}
-                </Button>
+                <div className="space-y-4">
+                  {students.map((student) => (
+                    <div key={student.id} className="p-4 border rounded-lg">
+                      <div className="font-medium">{student.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {student.major} • {student.academicYear}
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {Object.entries(student.skills as Record<string, number>).map(
+                          ([skill, level]) => (
+                            <div key={skill} className="text-sm">
+                              {skill}: {renderSkillLevel(level)}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Generated Groups</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => generateGroupsMutation.mutate()}
-                disabled={generateGroupsMutation.isPending}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Regenerate
-              </Button>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {groups.map((group) => {
-                const groupStudents = students.filter(student =>
-                  group.studentIds.includes(student.id)
-                );
+            {groups.length > 0 && (
+              <div className="mt-8">
+                <h2 className="text-2xl font-bold mb-4">Generated Groups</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {groups.map((group) => {
+                    const groupStudents = students.filter(student =>
+                      group.studentIds.includes(student.id)
+                    );
 
-                return (
-                  <Card key={group.id}>
-                    <CardHeader>
-                      <CardTitle>{group.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {groupStudents.map(student => (
-                          <div key={student.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/50">
-                            <div>
-                              <div className="font-medium">{student.name}</div>
-                              <div className="text-sm text-muted-foreground">{student.major}</div>
-                              <div className="text-sm">
-                                {Object.entries(student.skills as Record<string, number>).map(
-                                  ([skill, level]) => (
-                                    <div key={skill}>
-                                      {skill}: {renderSkillLevel(level)}
-                                    </div>
-                                  )
-                                )}
+                    return (
+                      <Card key={group.id}>
+                        <CardHeader>
+                          <CardTitle>{group.name}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {groupStudents.map(student => (
+                              <div key={student.id} className="p-2 rounded-md bg-muted/50">
+                                <div className="font-medium">{student.name}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {student.major} • {student.academicYear}
+                                </div>
+                                <div className="mt-1 text-sm">
+                                  {Object.entries(student.skills as Record<string, number>).map(
+                                    ([skill, level]) => (
+                                      <div key={skill}>
+                                        {skill}: {renderSkillLevel(level)}
+                                      </div>
+                                    )
+                                  )}
+                                </div>
                               </div>
-                            </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
