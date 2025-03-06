@@ -5,9 +5,11 @@ import { Redirect, Route } from "wouter";
 export function ProtectedRoute({
   path,
   component: Component,
+  requireCanvasSetup = false,
 }: {
   path: string;
   component: () => React.JSX.Element;
+  requireCanvasSetup?: boolean;
 }) {
   const { user, isLoading } = useAuth();
 
@@ -25,6 +27,24 @@ export function ProtectedRoute({
     return (
       <Route path={path}>
         <Redirect to="/auth" />
+      </Route>
+    );
+  }
+
+  // If user already has Canvas token and tries to access Canvas setup, redirect to home
+  if (path === "/canvas" && user.canvasToken) {
+    return (
+      <Route path={path}>
+        <Redirect to="/" />
+      </Route>
+    );
+  }
+
+  // Redirect to Canvas setup if required and user doesn't have Canvas token
+  if (requireCanvasSetup && !user.canvasToken && path !== "/canvas") {
+    return (
+      <Route path={path}>
+        <Redirect to="/canvas" />
       </Route>
     );
   }
