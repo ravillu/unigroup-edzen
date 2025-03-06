@@ -8,6 +8,7 @@ import { Form as FormType } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Form,
   FormControl,
@@ -34,25 +35,27 @@ import {
 const academicYears = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
 const genders = ["Male", "Female", "Non-binary", "Prefer not to say"];
 const nuinCampuses = [
-  "N/A",
-  "London",
-  "Dublin",
-  "Melbourne",
-  "Vancouver",
-  "San Francisco",
-  "Berlin",
+  "Dublin, Ireland",
+  "London, England",
+  "Melbourne, Australia",
+  "Prague, Czech Republic",
+  "Rome, Italy"
 ];
+
+// Updated from screenshot
 const majors = [
-  "Business Administration",
-  "Computer Science",
-  "Data Science",
-  "Economics",
-  "Engineering",
-  "Finance",
-  "Information Systems",
-  "Marketing",
-  "Other"
+  "MKTG - Marketing",
+  "FIN - Finance",
+  "Explore Business",
+  "Entrepreneurship",
+  "Accounting",
+  "MIS - Management Information Systems",
+  "Supply Chain Management",
+  "Psychology",
+  "MGMT - Management",
+  "FINTECH - Financial Technology"
 ];
+
 const ethnicities = [
   "American Indian or Alaska Native",
   "Asian",
@@ -64,6 +67,15 @@ const ethnicities = [
   "Prefer not to say"
 ];
 
+const skillLevels = [
+  { value: "0", label: "0 - No experience" },
+  { value: "1", label: "1 - Basic understanding" },
+  { value: "2", label: "2 - Some practical experience" },
+  { value: "3", label: "3 - Competent" },
+  { value: "4", label: "4 - Advanced" },
+  { value: "5", label: "5 - Expert" }
+];
+
 const studentFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   nuid: z.string().min(1, "NUID is required"),
@@ -71,7 +83,8 @@ const studentFormSchema = z.object({
   academicYear: z.string().min(1, "Academic year is required"),
   ethnicity: z.string().min(1, "Ethnicity is required"),
   major: z.string().min(1, "Major is required"),
-  nunStatus: z.string().min(1, "NUin status is required"),
+  isNuin: z.enum(["yes", "no"]),
+  nuinCampus: z.string().optional(),
   skills: z.record(z.number().min(0).max(5)),
 });
 
@@ -99,6 +112,7 @@ export default function StudentFormPage() {
   const formMethods = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
     defaultValues: {
+      isNuin: "no",
       skills: questions.reduce(
         (acc, q) => ({ ...acc, [q.text]: 0 }),
         {} as Record<string, number>
@@ -106,12 +120,18 @@ export default function StudentFormPage() {
     },
   });
 
+  const isNuin = formMethods.watch("isNuin") === "yes";
+
   const submitFormMutation = useMutation({
     mutationFn: async (values: StudentFormValues) => {
+      const { isNuin, nuinCampus, ...rest } = values;
       const res = await apiRequest(
         "POST",
         `/api/forms/${formId}/students`,
-        values
+        {
+          ...rest,
+          nunStatus: isNuin === "yes" ? nuinCampus : "N/A"
+        }
       );
       return res.json();
     },
@@ -311,31 +331,68 @@ export default function StudentFormPage() {
 
                 <FormField
                   control={formMethods.control}
-                  name="nunStatus"
+                  name="isNuin"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>NUin Campus</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select NUin campus" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {nuinCampuses.map((campus) => (
-                            <SelectItem key={campus} value={campus}>
-                              {campus}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <FormItem className="space-y-3">
+                      <FormLabel>Are you a NUin student?</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <RadioGroupItem value="yes" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Yes
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <RadioGroupItem value="no" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              No
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {isNuin && (
+                  <FormField
+                    control={formMethods.control}
+                    name="nuinCampus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>NUin Campus</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select NUin campus" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {nuinCampuses.map((campus) => (
+                              <SelectItem key={campus} value={campus}>
+                                {campus}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Skills Assessment</h3>
@@ -360,9 +417,9 @@ export default function StudentFormPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {Array.from({ length: 6 }).map((_, i) => (
-                                  <SelectItem key={i} value={i.toString()}>
-                                    {i} - {i === 0 ? "Novice" : i === 5 ? "Expert" : ""}
+                                {skillLevels.map((level) => (
+                                  <SelectItem key={level.value} value={level.value}>
+                                    {level.label}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
