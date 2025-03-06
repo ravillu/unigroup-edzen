@@ -1,0 +1,105 @@
+Project Overview
+
+You will create an advanced, AI-powered Student Grouping Dashboard for Northeastern University, specifically designed for seamless integration with Canvas. This application will automate group creation by balancing skill levels, diversity (gender, ethnicity, major, NUN campuses), and user-specified criteria, leveraging Material UI to create an intuitive, branded interface.
+
+Application Requirements
+
+Frontend (React with Material UI)
+
+Authentication: Integrate secure Northeastern Single Sign-On (SSO) for professor authentication.
+
+Dashboard Overview:
+
+Display all class forms created with easily copyable Canvas assignment URLs.
+
+Clearly visualize different sections/classes.
+
+Form Builder:
+
+Drag-and-drop interface to prioritize existing or new questions.
+
+Allow professors to dynamically add custom questions with a customizable rating scale.
+
+Student Form:
+
+Personal Information: Name, NUID, Gender
+
+Academic Information: Academic Year, Ethnicity, Major (with dual major support), NUN status (dynamic dropdown fetching from Northeastern's website)
+
+Skill Assessment: Rating (0-5) for Excel proficiency, Public Speaking Comfort, Writing Ability, Social Outgoingness, Business Planning experience
+
+Group Visualization:
+
+Tabular view of generated groups displaying student details, skill scores, and sorting capabilities.
+
+Interactive and intuitive visualization allowing easy manual adjustments to groups.
+
+Backend (Node.js, Express.js, MongoDB)
+
+RESTful APIs to handle CRUD operations and authentication securely.
+
+Structured data storage in MongoDB using JSON format.
+
+AI-driven grouping algorithm:
+
+Prioritize and balance groups based on professor-defined criteria.
+
+Maximize diversity: gender, major, ethnicity, NUN campuses, and skill ratings.
+
+Allow manual adjustments or swapping within groups before final publishing.
+
+Canvas Integration
+
+Automated, seamless integration with Canvas to create and update student groups directly.
+
+Real-time synchronization and notifications for group creation status.
+
+Error handling and feedback loops integrated into UI.
+
+UI/UX Design Guidelines
+
+Utilize Material UI v5 components following best practices.
+
+Responsive and adaptive design for desktop and mobile.
+
+Branding alignment with Northeastern's colors (red, black, white), logos, and typography.
+
+Consistent and intuitive navigation with clear hierarchy and visual cues.
+
+Infrastructure and Deployment (Replit)
+
+Deploy application seamlessly using Replit.
+
+CI/CD integration via Replit built-in tools.
+
+Git version control integrated for code collaboration and continuous integration.
+
+Ensure scalable deployment via cloud containers (Replit-supported Docker containers).
+
+Development Milestones
+
+Phase 1: Core MVP
+
+Authentication setup, basic form creation, frontend UI/UX baseline.
+
+Phase 2: Feature Expansion
+
+Advanced form builder, dynamic question priorities, AI-driven grouping algorithm.
+
+Phase 3: Integration & Polish
+
+Full Canvas integration, comprehensive UI/UX enhancements, manual group adjustments.
+
+Phase 4: Deployment and Iteration
+
+Cloud deployment on Replit infrastructure, monitoring, feedback incorporation, continuous iteration based on professor/student feedback.
+
+Key Metrics
+
+Time efficiency in forming balanced groups.
+
+Professor and student satisfaction ratings.
+
+Robustness and reliability (uptime, responsiveness).
+
+Use this prompt comprehensively to guide your full-stack development process on Replit, aiming to deliver a cutting-edge, production-ready Student Grouping Dashboard tailored specifically for Northeastern University.
