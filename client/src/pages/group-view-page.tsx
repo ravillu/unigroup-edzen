@@ -11,13 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 
-// Skill level rendering helper
-function renderSkillLevel(level: number): string {
-  const stars = "★".repeat(level);
-  const emptyStars = "☆".repeat(5 - level);
-  return stars + emptyStars;
-}
-
 export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
   const formId = id ? parseInt(id) : null;
@@ -130,8 +123,8 @@ export default function GroupViewPage() {
         {/* Form header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold">{form.title}</h1>
-            {form.description && (
+            <h1 className="text-3xl font-bold">{form?.title}</h1>
+            {form?.description && (
               <p className="text-muted-foreground mt-2">{form.description}</p>
             )}
           </div>
@@ -143,10 +136,15 @@ export default function GroupViewPage() {
             <CardTitle>Group Configuration</CardTitle>
             <CardDescription>
               Configure group size and skill priorities for optimal group formation.
-              The algorithm will:
-              1. Calculate student scores based on their skills and your priorities
-              2. Sort students by overall skill scores
-              3. Distribute students across groups using a snake pattern to ensure balanced skill distribution
+              The algorithm:
+              1. Calculates weighted skill scores based on your priorities
+              2. Ensures balanced distribution of high-skill students
+              3. Optimizes for diversity in:
+                 - Gender balance
+                 - Ethnic representation
+                 - Academic year mix
+                 - NUin/Non-NUin ratio
+              4. Maintains even group sizes
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -157,15 +155,15 @@ export default function GroupViewPage() {
                   type="number" 
                   value={groupSize}
                   onChange={(e) => setGroupSize(parseInt(e.target.value))}
-                  min={2}
-                  max={6}
+                  min={3}
+                  max={8}
                   className="max-w-xs"
                 />
               </div>
 
               <div className="space-y-4">
                 <Label>Skill Priorities</Label>
-                {form.questions.map((question: any) => (
+                {form?.questions.map((question: any) => (
                   <div key={question.id} className="grid gap-2">
                     <Label>{question.text}</Label>
                     <div className="flex items-center gap-4">
@@ -215,20 +213,29 @@ export default function GroupViewPage() {
                   <Card key={group.id}>
                     <CardHeader>
                       <CardTitle>{group.name}</CardTitle>
+                      <CardDescription>
+                        {groupStudents.length} members
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
                         {groupStudents.map(student => (
                           <div key={student.id} className="p-2 rounded-md bg-muted/50">
                             <div className="font-medium">{student.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {student.major} • {student.academicYear} • {student.nunStatus === 'Yes' ? 'NUin' : 'Non-NUin'}
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              <div>
+                                {student.major} • {student.academicYear} • {student.nunStatus === 'Yes' ? 'NUin' : 'Non-NUin'}
+                              </div>
+                              <div>
+                                {student.gender} • {student.ethnicity}
+                              </div>
                             </div>
-                            <div className="mt-1 text-sm">
+                            <div className="mt-2 space-y-1 text-sm">
                               {Object.entries(student.skills as Record<string, number>).map(
                                 ([skill, level]) => (
-                                  <div key={skill}>
-                                    {skill}: {renderSkillLevel(level)}
+                                  <div key={skill} className="flex justify-between">
+                                    <span>{skill}:</span>
+                                    <span className="font-mono">{level}/5</span>
                                   </div>
                                 )
                               )}

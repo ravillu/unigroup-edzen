@@ -97,17 +97,28 @@ export class DatabaseStorage {
     // Delete existing groups first
     await this.deleteExistingGroups(formId);
 
-    // Calculate student scores based on skill priorities
+    // Calculate student scores and metadata
     const studentScores = students.map(student => {
-      let totalScore = 0;
+      // Calculate weighted skill score
+      let skillScore = 0;
       for (const [skill, priority] of Object.entries(skillPriorities)) {
-        totalScore += ((student.skills as any)[skill] || 0) * priority;
+        skillScore += ((student.skills as any)[skill] || 0) * priority;
       }
-      return { student, score: totalScore };
+
+      return {
+        student,
+        skillScore,
+        metadata: {
+          gender: student.gender,
+          ethnicity: student.ethnicity,
+          nunStatus: student.nunStatus,
+          academicYear: student.academicYear
+        }
+      };
     });
 
-    // Sort students by score
-    studentScores.sort((a, b) => b.score - a.score);
+    // Sort students by skill score
+    studentScores.sort((a, b) => b.skillScore - a.skillScore);
 
     // Calculate number of groups
     const numGroups = Math.ceil(students.length / groupSize);
@@ -115,22 +126,60 @@ export class DatabaseStorage {
       .fill(null)
       .map(() => ({ studentIds: [] }));
 
-    // Distribute students using snake pattern
-    let groupIndex = 0;
-    let direction = 1;
+    // Helper function to calculate group diversity score
+    const calculateGroupDiversity = (group: number[], newStudent: any) => {
+      const groupStudents = group.map(id => 
+        studentScores.find(s => s.student.id === id)!
+      );
 
-    studentScores.forEach(({ student }) => {
-      groups[groupIndex].studentIds.push(student.id);
+      let diversityScore = 0;
 
-      groupIndex += direction;
-      if (groupIndex >= numGroups) {
-        groupIndex = numGroups - 1;
-        direction = -1;
-      } else if (groupIndex < 0) {
-        groupIndex = 0;
-        direction = 1;
+      // Check gender balance
+      const genderCounts = new Map();
+      [...groupStudents, newStudent].forEach(s => {
+        genderCounts.set(s.metadata.gender, (genderCounts.get(s.metadata.gender) || 0) + 1);
+      });
+      diversityScore += Math.min(...Array.from(genderCounts.values())) / Math.max(...Array.from(genderCounts.values()));
+
+      // Check ethnicity diversity
+      const ethnicityCounts = new Map();
+      [...groupStudents, newStudent].forEach(s => {
+        ethnicityCounts.set(s.metadata.ethnicity, (ethnicityCounts.get(s.metadata.ethnicity) || 0) + 1);
+      });
+      diversityScore += ethnicityCounts.size / ([...groupStudents, newStudent].length);
+
+      // Check NUin status mix
+      const nuinCount = [...groupStudents, newStudent].filter(s => s.metadata.nunStatus === 'Yes').length;
+      diversityScore += Math.abs(nuinCount - ([...groupStudents, newStudent].length / 2)) * -1;
+
+      // Check academic year distribution
+      const yearCounts = new Map();
+      [...groupStudents, newStudent].forEach(s => {
+        yearCounts.set(s.metadata.academicYear, (yearCounts.get(s.metadata.academicYear) || 0) + 1);
+      });
+      diversityScore += yearCounts.size / ([...groupStudents, newStudent].length);
+
+      return diversityScore;
+    };
+
+    // Distribute students ensuring skill and diversity balance
+    for (const studentData of studentScores) {
+      // Find the best group for this student
+      let bestGroupIndex = 0;
+      let bestDiversityScore = -Infinity;
+
+      for (let i = 0; i < groups.length; i++) {
+        if (groups[i].studentIds.length >= groupSize) continue;
+
+        const diversityScore = calculateGroupDiversity(groups[i].studentIds, studentData);
+        if (diversityScore > bestDiversityScore) {
+          bestDiversityScore = diversityScore;
+          bestGroupIndex = i;
+        }
       }
-    });
+
+      groups[bestGroupIndex].studentIds.push(studentData.student.id);
+    }
 
     // Create groups in database
     const createdGroups: Group[] = [];
