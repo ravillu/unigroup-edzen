@@ -4,10 +4,6 @@ interface AssignmentOptions {
   name: string;
   description?: string;
   submission_types: string[];
-  external_tool_tag_attributes?: {
-    url: string;
-    new_tab?: boolean;
-  };
   published?: boolean;
 }
 
@@ -84,7 +80,6 @@ class CanvasService {
             name: options.name,
             description: options.description,
             submission_types: options.submission_types,
-            external_tool_tag_attributes: options.external_tool_tag_attributes,
             published: options.published
           }
         },
