@@ -1,5 +1,16 @@
 import axios from 'axios';
 
+interface AssignmentOptions {
+  name: string;
+  description?: string;
+  submission_types: string[];
+  external_tool_tag_attributes?: {
+    url: string;
+    new_tab?: boolean;
+  };
+  published?: boolean;
+}
+
 class CanvasService {
   private apiToken: string;
   private baseUrl: string;
@@ -61,6 +72,34 @@ class CanvasService {
     } catch (error) {
       console.error(`Failed to fetch students for course ${courseId}:`, error);
       throw new Error('Failed to fetch Canvas course students');
+    }
+  }
+
+  async createAssignment(courseId: number, options: AssignmentOptions) {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/api/v1/courses/${courseId}/assignments`,
+        {
+          assignment: {
+            name: options.name,
+            description: options.description,
+            submission_types: options.submission_types,
+            external_tool_tag_attributes: options.external_tool_tag_attributes,
+            published: options.published
+          }
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiToken}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error(`Failed to create assignment in course ${courseId}:`, error);
+      throw new Error('Failed to create Canvas assignment');
     }
   }
 }

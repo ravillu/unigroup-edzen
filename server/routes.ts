@@ -172,6 +172,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add this route to handle Canvas assignment creation
+  app.post("/api/canvas/courses/:courseId/assignments", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const { formId, name, description } = req.body;
+
+      // Create assignment in Canvas
+      const assignment = await canvasService.createAssignment(courseId, {
+        name,
+        description,
+        submission_types: ["external_tool"],
+        external_tool_tag_attributes: {
+          url: `${process.env.APP_URL}/forms/${formId}/submit`,
+          new_tab: true
+        },
+        published: true
+      });
+
+      res.json(assignment);
+    } catch (error) {
+      console.error('Failed to create Canvas assignment:', error);
+      res.status(500).json({ message: "Failed to create Canvas assignment" });
+    }
+  });
+
+
   // Forms
   app.post("/api/forms", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

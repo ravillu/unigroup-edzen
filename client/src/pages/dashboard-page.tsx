@@ -104,10 +104,10 @@ export default function DashboardPage() {
                       <p className="text-sm text-muted-foreground mb-4">
                         {course.total_students} students enrolled
                       </p>
-                      <Link href={`/forms/new?courseId=${course.id}`}>
+                      <Link href={`/forms/new?courseId=${course.id}&courseName=${encodeURIComponent(course.name)}`}>
                         <Button className="w-full">
                           <Plus className="mr-2 h-4 w-4" />
-                          Create Group Formation
+                          Publish Group Formation Assignment
                         </Button>
                       </Link>
                     </CardContent>

@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,8 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { GripVertical, Plus, Save, X, HelpCircle } from "lucide-react";
+import { GripVertical, Plus, Save, X, HelpCircle, FileText } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -34,6 +35,7 @@ const formSchema = z.object({
       max: z.number(),
     })
   ),
+  courseId: z.number(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -79,23 +81,52 @@ const defaultQuestions = [
 export default function FormBuilderPage() {
   const [, setLocation] = useLocation();
   const [questions, setQuestions] = useState(defaultQuestions);
+  const { toast } = useToast();
+
+  // Get courseId and courseName from URL
+  const params = new URLSearchParams(window.location.search);
+  const courseId = parseInt(params.get("courseId") || "0");
+  const courseName = params.get("courseName") || "";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      title: decodeURIComponent(courseName),
       questions: defaultQuestions,
       groupSize: 4,
+      courseId,
     },
   });
 
   const createFormMutation = useMutation({
     mutationFn: async (values: FormValues) => {
-      const res = await apiRequest("POST", "/api/forms", values);
-      return res.json();
+      // First create the form
+      const formRes = await apiRequest("POST", "/api/forms", values);
+      const formData = await formRes.json();
+
+      // Then create Canvas assignment
+      const assignmentRes = await apiRequest("POST", `/api/canvas/courses/${values.courseId}/assignments`, {
+        formId: formData.id,
+        name: values.title,
+        description: values.description,
+      });
+
+      return formData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/forms"] });
+      toast({
+        title: "Success",
+        description: "Form published and assignment created in Canvas",
+      });
       setLocation("/");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -131,7 +162,7 @@ export default function FormBuilderPage() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Create New Form</h1>
+        <h1 className="text-3xl font-bold mb-8">Create Group Formation Assignment</h1>
 
         <Form {...form}>
           <form
@@ -145,9 +176,9 @@ export default function FormBuilderPage() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Form Title</FormLabel>
+                      <FormLabel>Assignment Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter form title" {...field} />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -159,10 +190,10 @@ export default function FormBuilderPage() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Assignment Instructions</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Enter form description"
+                          placeholder="Enter instructions for students"
                           {...field}
                         />
                       </FormControl>
@@ -282,9 +313,13 @@ export default function FormBuilderPage() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={createFormMutation.isPending}>
-                <Save className="mr-2 h-4 w-4" />
-                Create Form
+              <Button 
+                type="submit" 
+                disabled={createFormMutation.isPending}
+                className="gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Publish Assignment
               </Button>
             </div>
           </form>
