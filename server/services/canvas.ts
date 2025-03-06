@@ -18,18 +18,21 @@ class CanvasService {
 
   private async request(endpoint: string) {
     try {
+      console.log('Making Canvas API request to:', `${this.baseUrl}/api/v1/${endpoint}`);
       const response = await axios.get(`${this.baseUrl}/api/v1/${endpoint}`, {
         headers: {
           'Authorization': `Bearer ${this.apiToken}`,
           'Accept': 'application/json'
         }
       });
+      console.log('Canvas API response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Canvas API Error:', {
         status: error.response?.status,
         message: error.response?.data?.message || error.message,
-        endpoint
+        endpoint,
+        headers: error.response?.headers
       });
       throw error;
     }
@@ -37,8 +40,10 @@ class CanvasService {
 
   async getCourses() {
     try {
-      // Only fetch courses where user is teacher
-      const courses = await this.request('courses?enrollment_type=teacher&include[]=total_students&state[]=available');
+      // Fetch all available courses where the user is a teacher
+      const courses = await this.request(
+        'courses?enrollment_type=teacher&include[]=total_students&per_page=100'
+      );
       return courses;
     } catch (error) {
       console.error('Failed to fetch courses:', error);
@@ -48,9 +53,9 @@ class CanvasService {
 
   async getCourseStudents(courseId: number) {
     try {
-      // Fetch all students (not just active ones) to ensure we get everyone
+      // Fetch all students including inactive ones
       const students = await this.request(
-        `courses/${courseId}/users?enrollment_type[]=student&per_page=100&include[]=email`
+        `courses/${courseId}/users?enrollment_type[]=student&per_page=100&include[]=email&include[]=enrollments`
       );
       return students;
     } catch (error) {
