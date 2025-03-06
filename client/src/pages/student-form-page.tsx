@@ -27,9 +27,9 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
@@ -104,17 +104,27 @@ type Question = {
 
 export default function StudentFormPage() {
   const { id } = useParams<{ id: string }>();
-  const formId = parseInt(id);
-  const [, setLocation] = useLocation();
+  const formId = id ? parseInt(id) : null;
   const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
 
-  const { data: formData, isLoading: formLoading } = useQuery<FormType>({
+  console.log('Form ID:', formId); // Debug log
+
+  const { data: formData, isLoading: formLoading, error: formError } = useQuery<FormType>({
     queryKey: [`/api/forms/${formId}`],
-    enabled: !isNaN(formId),
+    enabled: formId !== null,
+    retry: 3,
+    onError: (error) => {
+      console.error('Failed to fetch form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load form. Please check the URL and try again.",
+        variant: "destructive",
+      });
+    }
   });
 
-  const questions = (formData?.questions as Question[]) || [];
+  const questions = (formData?.questions || []) as Question[];
 
   const formMethods = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
@@ -131,6 +141,10 @@ export default function StudentFormPage() {
 
   const submitFormMutation = useMutation({
     mutationFn: async (values: StudentFormValues) => {
+      if (!formId) throw new Error('Invalid form ID');
+
+      console.log('Submitting form values:', values); // Debug log
+
       try {
         const { isNuin, nuinCampus, ...rest } = values;
         const response = await apiRequest(
@@ -146,7 +160,9 @@ export default function StudentFormPage() {
           throw new Error('Failed to submit form');
         }
 
-        return response.json();
+        const result = await response.json();
+        console.log('Form submission result:', result); // Debug log
+        return result;
       } catch (error) {
         console.error('Form submission error:', error);
         throw error;
@@ -169,13 +185,14 @@ export default function StudentFormPage() {
     }
   });
 
-  if (isNaN(formId)) {
+  // Invalid form ID state
+  if (!formId) {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">Invalid form ID.</p>
+              <p className="text-muted-foreground">Invalid form URL. Please check the link and try again.</p>
             </CardContent>
           </Card>
         </div>
@@ -183,6 +200,7 @@ export default function StudentFormPage() {
     );
   }
 
+  // Loading state
   if (formLoading) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -190,6 +208,21 @@ export default function StudentFormPage() {
           <Card>
             <CardContent className="py-8 text-center">
               <p className="text-muted-foreground">Loading form...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Form not found state
+  if (!formData) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">Form not found. Please check the URL and try again.</p>
             </CardContent>
           </Card>
         </div>
