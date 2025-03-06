@@ -8,102 +8,127 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section with Animated Banner */}
+      {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#662D91]/5 to-[#8DC63F]/5" />
-
-        {/* Animated Neural Network Background */}
-        <div className="absolute inset-0 overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0">
           <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]">
-            <div className="absolute left-0 top-0 h-[200%] w-[200%] animate-[spin_20s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0%,#662D91_15%,transparent_40%)]" />
-            <div className="absolute right-0 bottom-0 h-[200%] w-[200%] animate-[spin_15s_linear_infinite] bg-[conic-gradient(from_180deg,transparent_0%,#F7941D_15%,transparent_40%)]" />
-            <div className="absolute left-1/2 top-1/2 h-[150%] w-[150%] -translate-x-1/2 -translate-y-1/2 animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_90deg,transparent_0%,#8DC63F_15%,transparent_40%)]" />
+            {/* Neural Network Animation */}
+            <div className="absolute inset-0">
+              <svg className="w-full h-full opacity-30" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#662D91', stopOpacity: 0.6 }} />
+                    <stop offset="50%" style={{ stopColor: '#F7941D', stopOpacity: 0.4 }} />
+                    <stop offset="100%" style={{ stopColor: '#8DC63F', stopOpacity: 0.6 }} />
+                  </linearGradient>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grad1)" />
+              </svg>
+
+              {/* Animated Network Lines */}
+              <div className="absolute inset-0 overflow-hidden">
+                {[...Array(20)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute h-px bg-gradient-to-r from-[#662D91]/20 via-[#F7941D]/20 to-[#8DC63F]/20"
+                    style={{
+                      width: '200%',
+                      left: '-50%',
+                      top: `${(i * 100) / 20}%`,
+                      transform: 'rotate(35deg)',
+                    }}
+                    animate={{
+                      translateX: ['-20%', '20%', '-20%'],
+                    }}
+                    transition={{
+                      duration: 8 + i * 0.5,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
-
-          {/* Floating Nodes */}
-          {[...Array(6)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute h-4 w-4 rounded-full bg-white/30 backdrop-blur-sm"
-              animate={{
-                x: ["0%", "100%", "0%"],
-                y: [`${30 + i * 10}%`, `${60 + i * 5}%`, `${30 + i * 10}%`],
-              }}
-              transition={{
-                duration: 10 + i * 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          ))}
-
-          {/* Connecting Lines */}
-          <svg className="absolute inset-0 w-full h-full opacity-20">
-            <pattern
-              id="grid"
-              width="50"
-              height="50"
-              patternUnits="userSpaceOnUse"
-              className="text-white/10"
-            >
-              <path
-                d="M.5 50V.5H50"
-                fill="none"
-                stroke="currentColor"
-                strokeDasharray="4 4"
-              />
-            </pattern>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
+        {/* Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Logo Header */}
+          <div className="flex justify-center mb-16">
+            <motion.img
+              src="/attached_assets/Edzen_AI.jpg"
+              alt="EdZen AI Logo"
+              className="h-24 object-contain"
+              initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="relative z-10"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-10">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">
                 UniGroup by{" "}
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#662D91] via-[#F7941D] to-[#8DC63F]">
                   EdZen AI™
                 </span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8">
-                Transform your classroom dynamics with AI-powered group formation and seamless Canvas integration. The future of collaborative learning is here.
+                Transform your classroom dynamics with AI-powered group formation and seamless Canvas integration. Experience the future of collaborative learning.
               </p>
               <div className="flex gap-4">
                 <Button 
                   size="lg" 
                   onClick={() => setLocation("/auth")}
-                  className="bg-gradient-to-r from-[#662D91] to-[#F7941D] hover:opacity-90"
+                  className="bg-[#662D91] hover:bg-[#662D91]/90 text-white"
                 >
                   Get Started Free
                   <ChevronRight className="ml-2 h-5 w-4" />
                 </Button>
-                <Button size="lg" variant="outline">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="border-[#662D91] text-[#662D91] hover:bg-[#662D91]/10"
+                >
                   Watch Demo
                 </Button>
               </div>
             </motion.div>
 
+            {/* Feature Preview Card */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative z-10"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="relative"
             >
-              <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
-                <div className="aspect-video rounded-lg bg-gradient-to-br from-[#662D91] via-[#F7941D] to-[#8DC63F] p-1">
-                  <div className="bg-white rounded-md h-full w-full flex items-center justify-center">
-                    <div className="text-center p-8">
-                      <div className="flex justify-center mb-4">
-                        <Users className="h-16 w-16 text-[#662D91]" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">Smart Group Formation</h3>
-                      <p className="text-sm text-muted-foreground">Powered by Advanced AI</p>
+              <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 shadow-xl border border-[#662D91]/10">
+                <div className="aspect-video rounded-lg bg-gradient-to-br from-[#662D91] to-[#F7941D] p-[2px]">
+                  <div className="bg-white rounded-md h-full w-full flex items-center justify-center p-8">
+                    <div className="text-center">
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.05, 1],
+                          rotate: [0, 5, -5, 0],
+                        }}
+                        transition={{
+                          duration: 4,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <Brain className="h-20 w-20 text-[#662D91] mx-auto mb-4" />
+                      </motion.div>
+                      <h3 className="text-2xl font-semibold mb-2">AI-Powered Matching</h3>
+                      <p className="text-muted-foreground">
+                        Our intelligent algorithms create perfectly balanced student groups
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -114,7 +139,7 @@ export default function LandingPage() {
       </div>
 
       {/* Features Section */}
-      <div className="bg-muted/50 py-24">
+      <div className="bg-gradient-to-b from-white to-[#662D91]/5 py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">Why Choose UniGroup?</h2>
@@ -126,8 +151,8 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FeatureCard
               icon={<Brain className="h-8 w-8 text-[#662D91]" />}
-              title="AI-Powered Matching"
-              description="Our advanced algorithms create balanced and effective student groups based on multiple criteria."
+              title="Smart Matching"
+              description="Advanced algorithms create balanced and effective student groups based on multiple criteria."
             />
             <FeatureCard
               icon={<Sparkles className="h-8 w-8 text-[#F7941D]" />}
@@ -144,8 +169,8 @@ export default function LandingPage() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-[#662D91] text-white py-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="bg-[#662D91] py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h2 className="text-3xl font-bold mb-4">
             Ready to Transform Your Classroom?
           </h2>
@@ -157,6 +182,7 @@ export default function LandingPage() {
             size="lg"
             variant="secondary"
             onClick={() => setLocation("/auth")}
+            className="bg-white text-[#662D91] hover:bg-white/90"
           >
             Start Free Trial
             <ChevronRight className="ml-2 h-5 w-5" />
@@ -168,6 +194,11 @@ export default function LandingPage() {
       <footer className="bg-background py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
+            <img
+              src="/attached_assets/Edzen_AI.jpg"
+              alt="EdZen AI Logo"
+              className="h-12 mx-auto mb-4"
+            />
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} UniGroup by EdZen AI™. All rights reserved.
             </p>
@@ -190,7 +221,7 @@ function FeatureCard({
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className="bg-background rounded-xl p-6 shadow-lg"
+      className="bg-white rounded-xl p-8 shadow-lg border border-[#662D91]/10"
     >
       <div className="mb-4">{icon}</div>
       <h3 className="text-xl font-semibold mb-2">{title}</h3>
