@@ -41,11 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
-      setLocation("/"); // Existing users go straight to homepage
+      // Direct users to Canvas setup if needed, otherwise dashboard
+      setLocation(user.canvasToken ? "/dashboard" : "/canvas");
     },
     onError: (error: Error) => {
       toast({
-        title: "Login failed",
+        title: "Login failed", 
         description: error.message,
         variant: "destructive",
       });
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
-      setLocation("/canvas"); // New users go to Canvas setup
+      setLocation("/canvas"); // New users always go to Canvas setup
     },
     onError: (error: Error) => {
       toast({
