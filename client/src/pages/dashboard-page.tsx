@@ -16,11 +16,12 @@ export default function DashboardPage() {
   });
 
   const copyToClipboard = (formId: number) => {
-    const url = `${window.location.origin}/forms/${formId}`;
+    // Update URL to point to the student submission form
+    const url = `${window.location.origin}/forms/${formId}/submit`;
     navigator.clipboard.writeText(url).then(() => {
       toast({
         title: "URL Copied",
-        description: "Form URL has been copied to clipboard",
+        description: "Student submission form URL has been copied to clipboard",
       });
     });
   };
@@ -93,7 +94,7 @@ export default function DashboardPage() {
                       onClick={() => copyToClipboard(form.id)}
                     >
                       <ClipboardCopy className="mr-2 h-4 w-4" />
-                      Copy URL
+                      Copy Form URL
                     </Button>
                     <Link href={`/forms/${form.id}`}>
                       <Button size="sm">
