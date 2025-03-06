@@ -142,7 +142,11 @@ export default function GroupViewPage() {
           <CardHeader>
             <CardTitle>Group Configuration</CardTitle>
             <CardDescription>
-              Configure group size and skill priorities before generating groups
+              Configure group size and skill priorities for optimal group formation.
+              The algorithm will:
+              1. Calculate student scores based on their skills and your priorities
+              2. Sort students by overall skill scores
+              3. Distribute students across groups using a snake pattern to ensure balanced skill distribution
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -197,37 +201,6 @@ export default function GroupViewPage() {
           </CardContent>
         </Card>
 
-        {/* Student List */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Student Responses</CardTitle>
-            <CardDescription>
-              {students.length} students have submitted their responses
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {students.map((student) => (
-                <div key={student.id} className="p-4 border rounded-lg">
-                  <div className="font-medium">{student.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {student.major} • {student.academicYear}
-                  </div>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {Object.entries(student.skills as Record<string, number>).map(
-                      ([skill, level]) => (
-                        <div key={skill} className="text-sm">
-                          {skill}: {renderSkillLevel(level)}
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Generated Groups */}
         {groups.length > 0 && (
           <div className="mt-8">
@@ -249,7 +222,7 @@ export default function GroupViewPage() {
                           <div key={student.id} className="p-2 rounded-md bg-muted/50">
                             <div className="font-medium">{student.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {student.major} • {student.academicYear}
+                              {student.major} • {student.academicYear} • {student.nunStatus === 'Yes' ? 'NUin' : 'Non-NUin'}
                             </div>
                             <div className="mt-1 text-sm">
                               {Object.entries(student.skills as Record<string, number>).map(
