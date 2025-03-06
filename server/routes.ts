@@ -181,12 +181,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { formId, name, description } = req.body;
 
       // Get the submission URL
-      const submissionUrl = `${process.env.APP_URL}/forms/${formId}/submit`;
+      const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+      const submissionUrl = `${baseUrl}/forms/${formId}/submit`;
 
       // Create assignment in Canvas
       const assignment = await canvasService.createAssignment(courseId, {
         name,
-        description: `Welcome to ${name}!\n\nPlease fill the personal profile survey using the link below before the start of your class.\n\nForm Link: ${submissionUrl}`,
+        description: `${description ? description + "\n\n" : ""}Welcome to ${name}!\n\nPlease fill the personal profile survey using the link below before the start of your class.\n\nForm Link: ${submissionUrl}`,
         submission_types: ["none"],
         published: true
       });
