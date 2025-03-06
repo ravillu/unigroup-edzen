@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertFormSchema, insertStudentSchema, insertGroupSchema, insertInstitutionSchema } from "@shared/schema";
-import { createCanvasService } from "./services/canvas";
+import { canvasService } from "./services/canvas"; // Updated import
 import { createCanvasAuthService } from "./services/canvas-auth";
 import { createLTIService } from "./services/lti";
 
@@ -151,17 +151,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const user = req.user;
-      if (!user.institutionId) {
-        return res.status(400).json({ message: "No institution associated with user" });
-      }
-
-      const institution = await storage.getInstitution(user.institutionId);
-      if (!institution) {
-        return res.status(404).json({ message: "Institution not found" });
-      }
-
-      const canvasService = createCanvasService(institution, user.canvasToken!);
       const courses = await canvasService.getCourses();
       res.json(courses);
     } catch (error) {
@@ -174,18 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const user = req.user;
-      if (!user.institutionId) {
-        return res.status(400).json({ message: "No institution associated with user" });
-      }
-
-      const institution = await storage.getInstitution(user.institutionId);
-      if (!institution) {
-        return res.status(404).json({ message: "Institution not found" });
-      }
-
       const courseId = parseInt(req.params.courseId);
-      const canvasService = createCanvasService(institution, user.canvasToken!);
       const students = await canvasService.getCourseStudents(courseId);
       res.json(students);
     } catch (error) {
