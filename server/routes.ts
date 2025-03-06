@@ -116,8 +116,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create test form
       const form = await storage.createForm({
         professorId: req.user.id,
-        title: "BUSN1011-SV Sample Form",
-        description: "Test form with sample student data",
+        title: "BUSN1101-SV-1335 Sample Form",
+        description: "Test form with real student data",
         questions: [
           { id: "speaking", text: "Public Speaking Comfort", type: "skill", min: 0, max: 5 },
           { id: "writing", text: "Writing Ability", type: "skill", min: 0, max: 5 },
@@ -128,118 +128,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date().toISOString()
       });
 
-      // Sample student data
+      // Sample student data from the provided dataset
       const sampleStudents = [
         {
-          name: "Sreevats Ramesh Ravillu",
-          nuid: "002851945",
-          major: "FIN - Finance",
-          academicYear: "Sophomore",
+          name: "Sarah Cheung",
+          nuid: "00000001",
+          major: "FIN",
+          academicYear: "First Year",
+          gender: "Female",
+          ethnicity: "Asian - East Asian (e.g., Chinese, Japanese, Korean)",
+          nunStatus: "N.U.in Italy – John Cabot University",
+          skills: {
+            "Public Speaking Comfort": 3,
+            "Writing Ability": 5,
+            "Social Outgoingness": 4,
+            "Excel Proficiency": 1,
+            "Business Planning Experience": 5
+          }
+        },
+        {
+          name: "Bharat Jain",
+          nuid: "00000002",
+          major: "FIN",
+          academicYear: "First Year",
           gender: "Male",
-          ethnicity: "Asian",
-          nunStatus: "No",
+          ethnicity: "Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)",
+          nunStatus: "N.U.in Scotland – University of Glasgow",
           skills: {
-            "Public Speaking Comfort": 2,
-            "Writing Ability": 2,
-            "Social Outgoingness": 1,
-            "Excel Proficiency": 4,
-            "Business Planning Experience": 5
-          }
-        },
-        {
-          name: "Sven T Olson",
-          nuid: "002851946",
-          major: "FINTECH - Financial Technology",
-          academicYear: "Freshman",
-          gender: "Female",
-          ethnicity: "Asian",
-          nunStatus: "No",
-          skills: {
-            "Public Speaking Comfort": 1,
-            "Writing Ability": 0,
-            "Social Outgoingness": 1,
-            "Excel Proficiency": 5,
-            "Business Planning Experience": 5
-          }
-        },
-        {
-          name: "Sven T Olson",
-          nuid: "002851947",
-          major: "Explore Business",
-          academicYear: "Freshman",
-          gender: "Non-binary",
-          ethnicity: "Asian",
-          nunStatus: "No",
-          skills: {
-            "Public Speaking Comfort": 1,
-            "Writing Ability": 2,
-            "Social Outgoingness": 2,
-            "Excel Proficiency": 4,
-            "Business Planning Experience": 5
-          }
-        },
-        {
-          name: "Sreevats",
-          nuid: "002851948",
-          major: "FINTECH - Financial Technology",
-          academicYear: "Sophomore",
-          gender: "Female",
-          ethnicity: "Asian",
-          nunStatus: "No",
-          skills: {
-            "Public Speaking Comfort": 1,
+            "Public Speaking Comfort": 4,
             "Writing Ability": 1,
-            "Social Outgoingness": 2,
-            "Excel Proficiency": 5,
+            "Social Outgoingness": 3,
+            "Excel Proficiency": 3,
+            "Business Planning Experience": 1
+          }
+        },
+        {
+          name: "Eric Elbery",
+          nuid: "00000003",
+          major: "FIN",
+          academicYear: "First Year",
+          gender: "Male",
+          ethnicity: "White",
+          nunStatus: "N.U.in Portugal – CIEE Lisbon",
+          skills: {
+            "Public Speaking Comfort": 4,
+            "Writing Ability": 3,
+            "Social Outgoingness": 4,
+            "Excel Proficiency": 4,
+            "Business Planning Experience": 5
+          }
+        },
+        {
+          name: "Amy Derr",
+          nuid: "00000004",
+          major: "Explore",
+          academicYear: "First Year",
+          gender: "Female",
+          ethnicity: "White",
+          nunStatus: "N.U.in France – The American University of Paris",
+          skills: {
+            "Public Speaking Comfort": 3,
+            "Writing Ability": 4,
+            "Social Outgoingness": 5,
+            "Excel Proficiency": 0,
+            "Business Planning Experience": 3
+          }
+        },
+        {
+          name: "Bennett Lin",
+          nuid: "00000005",
+          major: "MGMT",
+          academicYear: "First Year",
+          gender: "Male",
+          ethnicity: "Asian - East Asian (e.g., Chinese, Japanese, Korean)",
+          nunStatus: "N.U.in Germany – CIEE Berlin",
+          skills: {
+            "Public Speaking Comfort": 3,
+            "Writing Ability": 4,
+            "Social Outgoingness": 3,
+            "Excel Proficiency": 3,
+            "Business Planning Experience": 3
+          }
+        },
+        {
+          name: "Matthew Tobin",
+          nuid: "00000006",
+          major: "MKTG",
+          academicYear: "First Year",
+          gender: "Male",
+          ethnicity: "White",
+          nunStatus: "N.U.in Italy – John Cabot University",
+          skills: {
+            "Public Speaking Comfort": 4,
+            "Writing Ability": 4,
+            "Social Outgoingness": 3,
+            "Excel Proficiency": 4,
             "Business Planning Experience": 4
           }
         },
         {
-          name: "Sreevats Ramesh Ravillu",
-          nuid: "002851949",
-          major: "FIN - Finance",
-          academicYear: "Sophomore",
-          gender: "Female",
-          ethnicity: "Black or African American",
-          nunStatus: "No",
+          name: "Avi Nathan",
+          nuid: "00000007",
+          major: "FIN",
+          academicYear: "First Year",
+          gender: "Male",
+          ethnicity: "Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)",
+          nunStatus: "N.U.in Germany – CIEE Berlin",
           skills: {
-            "Public Speaking Comfort": 2,
-            "Writing Ability": 1,
-            "Social Outgoingness": 1,
-            "Excel Proficiency": 4,
-            "Business Planning Experience": 3
-          }
-        },
-        {
-          name: "Sreevats Ramesh Ravillu",
-          nuid: "002851950",
-          major: "FINTECH - Financial Technology",
-          academicYear: "Freshman",
-          gender: "Female",
-          ethnicity: "American Indian or Alaska Native",
-          nunStatus: "No",
-          skills: {
-            "Public Speaking Comfort": 1,
-            "Writing Ability": 1,
-            "Social Outgoingness": 2,
-            "Excel Proficiency": 4,
-            "Business Planning Experience": 3
-          }
-        },
-        {
-          name: "Sven T Olson",
-          nuid: "002851951",
-          major: "FINTECH - Financial Technology",
-          academicYear: "Sophomore",
-          gender: "Female",
-          ethnicity: "Asian",
-          nunStatus: "No",
-          skills: {
-            "Public Speaking Comfort": 1,
+            "Public Speaking Comfort": 3,
             "Writing Ability": 2,
-            "Social Outgoingness": 3,
+            "Social Outgoingness": 5,
             "Excel Proficiency": 4,
-            "Business Planning Experience": 3
+            "Business Planning Experience": 4
           }
         }
       ];

@@ -1,0 +1,1446 @@
+	
+BUSN1101-SV-1335	
+0	
+name	"Sarah Cheung"
+uid	"00000001"
+email	"cheung.s@northeastern.edu"
+gender	"Female"
+pursuingYr	"First Year"
+skillArr	
+0	"pursuingYr-First Year"
+1	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-1"
+2	"How comfortable are you presenting in front of others or speaking publicly?-3"
+3	"My teachers or others have frequently told me that I am a good writer-5"
+4	"I am generally more outgoing than shy in social or group settings-4"
+5	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-5"
+6	null
+7	null
+8	"FIN"
+9	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+10	null
+11	"N.U.in Italy – John Cabot University"
+12	null
+skills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-1"
+value	"1"
+hasSkill	"1"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-3"
+value	"3"
+hasSkill	"3"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-5"
+value	"5"
+hasSkill	"5"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-4"
+value	"4"
+hasSkill	"4"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-5"
+value	"5"
+hasSkill	"5"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Female"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+11	
+skillName	"N.U.in Italy – John Cabot University"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Italy – John Cabot University"
+hasSkill	true
+tableSkills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-1"
+value	"1"
+hasSkill	"1"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-3"
+value	"3"
+hasSkill	"3"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-5"
+value	"5"
+hasSkill	"5"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-4"
+value	"4"
+hasSkill	"4"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-5"
+value	"5"
+hasSkill	"5"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Female"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+11	
+skillName	"N.U.in Italy – John Cabot University"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Italy – John Cabot University"
+hasSkill	true
+1	
+name	"Bharat Jain"
+uid	"00000002"
+email	"jain.bh@northeastern.edu"
+gender	"Male"
+pursuingYr	"First Year"
+skillArr	
+0	"pursuingYr-First Year"
+1	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-3"
+2	"How comfortable are you presenting in front of others or speaking publicly?-4"
+3	"My teachers or others have frequently told me that I am a good writer-1"
+4	"I am generally more outgoing than shy in social or group settings-3"
+5	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-1"
+6	null
+7	null
+8	"FIN"
+9	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+10	null
+11	"N.U.in Scotland – University of Glasgow"
+12	null
+skills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-3"
+value	"3"
+hasSkill	"3"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-4"
+value	"4"
+hasSkill	"4"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-1"
+value	"1"
+hasSkill	"1"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-3"
+value	"3"
+hasSkill	"3"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-1"
+value	"1"
+hasSkill	"1"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+11	
+skillName	"N.U.in Scotland – University of Glasgow"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Scotland – University of Glasgow"
+hasSkill	true
+tableSkills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-3"
+value	"3"
+hasSkill	"3"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-4"
+value	"4"
+hasSkill	"4"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-1"
+value	"1"
+hasSkill	"1"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-3"
+value	"3"
+hasSkill	"3"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-1"
+value	"1"
+hasSkill	"1"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+11	
+skillName	"N.U.in Scotland – University of Glasgow"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Scotland – University of Glasgow"
+hasSkill	true
+2	
+name	"Eric Elbery"
+uid	"00000003"
+email	"elbery.e@northeastern.edu"
+gender	"Male"
+pursuingYr	"First Year"
+skillArr	
+0	"pursuingYr-First Year"
+1	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+2	"How comfortable are you presenting in front of others or speaking publicly?-4"
+3	"My teachers or others have frequently told me that I am a good writer-3"
+4	"I am generally more outgoing than shy in social or group settings-4"
+5	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-5"
+6	null
+7	null
+8	"FIN"
+9	"White"
+10	null
+11	"N.U.in Portugal – CIEE Lisbon"
+12	null
+skills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+value	"4"
+hasSkill	"4"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-4"
+value	"4"
+hasSkill	"4"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-3"
+value	"3"
+hasSkill	"3"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-4"
+value	"4"
+hasSkill	"4"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-5"
+value	"5"
+hasSkill	"5"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"White"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"White"
+hasSkill	true
+11	
+skillName	"N.U.in Portugal – CIEE Lisbon"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Portugal – CIEE Lisbon"
+hasSkill	true
+tableSkills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+value	"4"
+hasSkill	"4"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-4"
+value	"4"
+hasSkill	"4"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-3"
+value	"3"
+hasSkill	"3"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-4"
+value	"4"
+hasSkill	"4"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-5"
+value	"5"
+hasSkill	"5"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"White"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"White"
+hasSkill	true
+11	
+skillName	"N.U.in Portugal – CIEE Lisbon"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Portugal – CIEE Lisbon"
+hasSkill	true
+3	
+name	"Amy Derr"
+uid	"00000004"
+email	"derr.a@northeastern.edu"
+gender	"Female"
+pursuingYr	"First Year"
+skillArr	
+0	"pursuingYr-First Year"
+1	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-0"
+2	"How comfortable are you presenting in front of others or speaking publicly?-3"
+3	"My teachers or others have frequently told me that I am a good writer-4"
+4	"I am generally more outgoing than shy in social or group settings-5"
+5	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-3"
+6	null
+7	null
+8	"Explore"
+9	"White"
+10	null
+11	"N.U.in France – The American University of Paris"
+12	null
+skills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-0"
+value	"0"
+hasSkill	"0"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-3"
+value	"3"
+hasSkill	"3"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-4"
+value	"4"
+hasSkill	"4"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-5"
+value	"5"
+hasSkill	"5"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-3"
+value	"3"
+hasSkill	"3"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Female"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"Explore"
+hasSkill	true
+8	
+skillName	"Explore"
+hasSkill	true
+9	
+skillName	"White"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"White"
+hasSkill	true
+11	
+skillName	"N.U.in France – The American University of Paris"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in France – The American University of Paris"
+hasSkill	true
+tableSkills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-0"
+value	"0"
+hasSkill	"0"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-3"
+value	"3"
+hasSkill	"3"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-4"
+value	"4"
+hasSkill	"4"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-5"
+value	"5"
+hasSkill	"5"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-3"
+value	"3"
+hasSkill	"3"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Female"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"Explore"
+hasSkill	true
+8	
+skillName	"Explore"
+hasSkill	true
+9	
+skillName	"White"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"White"
+hasSkill	true
+11	
+skillName	"N.U.in France – The American University of Paris"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in France – The American University of Paris"
+hasSkill	true
+4	
+name	"Bennett Lin"
+uid	"00000005"
+email	"lin.b@northeastern.edu"
+gender	"Male"
+pursuingYr	"First Year"
+skillArr	
+0	"pursuingYr-First Year"
+1	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-3"
+2	"How comfortable are you presenting in front of others or speaking publicly?-3"
+3	"My teachers or others have frequently told me that I am a good writer-4"
+4	"I am generally more outgoing than shy in social or group settings-3"
+5	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-3"
+6	null
+7	null
+8	"MGMT"
+9	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+10	null
+11	"N.U.in Germany – CIEE Berlin"
+12	null
+skills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-3"
+value	"3"
+hasSkill	"3"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-3"
+value	"3"
+hasSkill	"3"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-4"
+value	"4"
+hasSkill	"4"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-3"
+value	"3"
+hasSkill	"3"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-3"
+value	"3"
+hasSkill	"3"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"MGMT"
+hasSkill	true
+8	
+skillName	"MGMT"
+hasSkill	true
+9	
+skillName	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+11	
+skillName	"N.U.in Germany – CIEE Berlin"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Germany – CIEE Berlin"
+hasSkill	true
+tableSkills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-3"
+value	"3"
+hasSkill	"3"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-3"
+value	"3"
+hasSkill	"3"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-4"
+value	"4"
+hasSkill	"4"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-3"
+value	"3"
+hasSkill	"3"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-3"
+value	"3"
+hasSkill	"3"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"MGMT"
+hasSkill	true
+8	
+skillName	"MGMT"
+hasSkill	true
+9	
+skillName	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+11	
+skillName	"N.U.in Germany – CIEE Berlin"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Germany – CIEE Berlin"
+hasSkill	true
+5	
+name	"Matthew Tobin"
+uid	"00000006"
+email	"tobin.m@northeastern.edu"
+gender	"Male"
+pursuingYr	"First Year"
+skillArr	
+0	"pursuingYr-First Year"
+1	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+2	"How comfortable are you presenting in front of others or speaking publicly?-4"
+3	"My teachers or others have frequently told me that I am a good writer-4"
+4	"I am generally more outgoing than shy in social or group settings-3"
+5	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-4"
+6	null
+7	null
+8	"MKTG"
+9	"White"
+10	null
+11	"N.U.in Italy – John Cabot University"
+12	null
+skills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+value	"4"
+hasSkill	"4"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-4"
+value	"4"
+hasSkill	"4"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-4"
+value	"4"
+hasSkill	"4"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-3"
+value	"3"
+hasSkill	"3"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-4"
+value	"4"
+hasSkill	"4"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"MKTG"
+hasSkill	true
+8	
+skillName	"MKTG"
+hasSkill	true
+9	
+skillName	"White"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"White"
+hasSkill	true
+11	
+skillName	"N.U.in Italy – John Cabot University"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Italy – John Cabot University"
+hasSkill	true
+tableSkills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+value	"4"
+hasSkill	"4"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-4"
+value	"4"
+hasSkill	"4"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-4"
+value	"4"
+hasSkill	"4"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-3"
+value	"3"
+hasSkill	"3"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-4"
+value	"4"
+hasSkill	"4"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"MKTG"
+hasSkill	true
+8	
+skillName	"MKTG"
+hasSkill	true
+9	
+skillName	"White"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"White"
+hasSkill	true
+11	
+skillName	"N.U.in Italy – John Cabot University"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Italy – John Cabot University"
+hasSkill	true
+6	
+name	"Avi Nathan"
+uid	"00000007"
+email	"nathan.a@northeastern.edu"
+gender	"Male"
+pursuingYr	"First Year"
+skillArr	
+0	"pursuingYr-First Year"
+1	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+2	"How comfortable are you presenting in front of others or speaking publicly?-3"
+3	"My teachers or others have frequently told me that I am a good writer-2"
+4	"I am generally more outgoing than shy in social or group settings-5"
+5	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-4"
+6	null
+7	null
+8	"FIN"
+9	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+10	null
+11	"N.U.in Germany – CIEE Berlin"
+12	null
+skills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+value	"4"
+hasSkill	"4"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-3"
+value	"3"
+hasSkill	"3"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-2"
+value	"2"
+hasSkill	"2"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-5"
+value	"5"
+hasSkill	"5"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-4"
+value	"4"
+hasSkill	"4"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+11	
+skillName	"N.U.in Germany – CIEE Berlin"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Germany – CIEE Berlin"
+hasSkill	true
+tableSkills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+value	"4"
+hasSkill	"4"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-3"
+value	"3"
+hasSkill	"3"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-2"
+value	"2"
+hasSkill	"2"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-5"
+value	"5"
+hasSkill	"5"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-4"
+value	"4"
+hasSkill	"4"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+11	
+skillName	"N.U.in Germany – CIEE Berlin"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Germany – CIEE Berlin"
+hasSkill	true
+7	
+name	"Ayushi Merchant"
+uid	"00000008"
+email	"merchant.a@northeastern.edu"
+gender	"Female"
+pursuingYr	"First Year"
+skillArr	
+0	"pursuingYr-First Year"
+1	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-5"
+2	"How comfortable are you presenting in front of others or speaking publicly?-2"
+3	"My teachers or others have frequently told me that I am a good writer-2"
+4	"I am generally more outgoing than shy in social or group settings-4"
+5	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-3"
+6	null
+7	null
+8	"FIN"
+9	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+10	null
+11	"N.U.in Czech Republic – University of New York in Prague"
+12	null
+skills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-5"
+value	"5"
+hasSkill	"5"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-2"
+value	"2"
+hasSkill	"2"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-2"
+value	"2"
+hasSkill	"2"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-4"
+value	"4"
+hasSkill	"4"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-3"
+value	"3"
+hasSkill	"3"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Female"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+11	
+skillName	"N.U.in Czech Republic – University of New York in Prague"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Czech Republic – University of New York in Prague"
+hasSkill	true
+tableSkills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	3
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-5"
+value	"5"
+hasSkill	"5"
+priority	4
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-2"
+value	"2"
+hasSkill	"2"
+priority	5
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-2"
+value	"2"
+hasSkill	"2"
+priority	6
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-4"
+value	"4"
+hasSkill	"4"
+priority	7
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-3"
+value	"3"
+hasSkill	"3"
+priority	8
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Female"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - South Asian (e.g., Indian, Pakistani, Bangladeshi)"
+hasSkill	true
+11	
+skillName	"N.U.in Czech Republic – University of New York in Prague"
+hasSkill	true
+priority	1
+12	
+tableTitle	"NUIN"
+value	"N.U.in Czech Republic – University of New York in Prague"
+hasSkill	true
+8	
+name	"Naoki"
+uid	"000000010"
+email	"naoki.f@northeastern.edu"
+gender	"Male"
+pursuingYr	"First Year"
+skillArr	
+0	"pursuingYr-First Year"
+1	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+2	"How comfortable are you presenting in front of others or speaking publicly?-3"
+3	"My teachers or others have frequently told me that I am a good writer-4"
+4	"I am generally more outgoing than shy in social or group settings-3"
+5	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-4"
+6	null
+7	null
+8	"MGMT"
+9	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+10	null
+skills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	2
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+value	"4"
+hasSkill	"4"
+priority	3
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-3"
+value	"3"
+hasSkill	"3"
+priority	4
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-4"
+value	"4"
+hasSkill	"4"
+priority	5
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-3"
+value	"3"
+hasSkill	"3"
+priority	6
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-4"
+value	"4"
+hasSkill	"4"
+priority	7
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"MGMT"
+hasSkill	true
+8	
+skillName	"MGMT"
+hasSkill	true
+9	
+skillName	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+tableSkills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	2
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-4"
+value	"4"
+hasSkill	"4"
+priority	3
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-3"
+value	"3"
+hasSkill	"3"
+priority	4
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-4"
+value	"4"
+hasSkill	"4"
+priority	5
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-3"
+value	"3"
+hasSkill	"3"
+priority	6
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-4"
+value	"4"
+hasSkill	"4"
+priority	7
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"MGMT"
+hasSkill	true
+8	
+skillName	"MGMT"
+hasSkill	true
+9	
+skillName	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"Asian - East Asian (e.g., Chinese, Japanese, Korean)"
+hasSkill	true
+9	
+name	"Lucas Lembck"
+uid	"000000011"
+email	"lembck.l@northeastern.edu"
+gender	"Male"
+pursuingYr	"First Year"
+skillArr	
+0	"pursuingYr-First Year"
+1	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-2"
+2	"How comfortable are you presenting in front of others or speaking publicly?-4"
+3	"My teachers or others have frequently told me that I am a good writer-3"
+4	"I am generally more outgoing than shy in social or group settings-4"
+5	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-5"
+6	null
+7	null
+8	"FIN"
+9	"White"
+10	null
+skills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	2
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-2"
+value	"2"
+hasSkill	"2"
+priority	3
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-4"
+value	"4"
+hasSkill	"4"
+priority	4
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-3"
+value	"3"
+hasSkill	"3"
+priority	5
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-4"
+value	"4"
+hasSkill	"4"
+priority	6
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-5"
+value	"5"
+hasSkill	"5"
+priority	7
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"White"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"White"
+hasSkill	true
+tableSkills	
+0	
+skillName	"pursuingYr-First Year"
+value	"First Year"
+hasSkill	"First Year"
+priority	2
+tableTitle	"pursuingYr"
+1	
+skillName	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?-2"
+value	"2"
+hasSkill	"2"
+priority	3
+tableTitle	"How proficient are you in using spreadsheet software like Microsoft Excel or Google Sheets?"
+2	
+skillName	"How comfortable are you presenting in front of others or speaking publicly?-4"
+value	"4"
+hasSkill	"4"
+priority	4
+tableTitle	"How comfortable are you presenting in front of others or speaking publicly?"
+3	
+skillName	"My teachers or others have frequently told me that I am a good writer-3"
+value	"3"
+hasSkill	"3"
+priority	5
+tableTitle	"My teachers or others have frequently told me that I am a good writer"
+4	
+skillName	"I am generally more outgoing than shy in social or group settings-4"
+value	"4"
+hasSkill	"4"
+priority	6
+tableTitle	"I am generally more outgoing than shy in social or group settings"
+5	
+skillName	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?-5"
+value	"5"
+hasSkill	"5"
+priority	7
+tableTitle	"How much prior experience do you have with business planning (e.g., creating business models, strategies, plans)?"
+6	
+tableTitle	"Gender"
+value	"Male"
+hasSkill	true
+7	
+tableTitle	"Major"
+value	"FIN"
+hasSkill	true
+8	
+skillName	"FIN"
+hasSkill	true
+9	
+skillName	"White"
+hasSkill	true
+priority	2
+10	
+tableTitle	"Ethnicity"
+value	"White"
+hasSkill	true

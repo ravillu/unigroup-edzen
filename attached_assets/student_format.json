@@ -1,0 +1,20 @@
+{
+  "students": [
+    {
+      "name": "Student Name",
+      "nuid": "Student ID (e.g., 002851945)",
+      "major": "Major Name (e.g., FIN - Finance)",
+      "academicYear": "Freshman/Sophomore/Junior/Senior",
+      "gender": "Male/Female/Non-binary",
+      "ethnicity": "Asian/Black or African American/Hispanic/White/etc",
+      "nunStatus": "No",
+      "skills": {
+        "Public Speaking Comfort": "0-5",
+        "Writing Ability": "0-5", 
+        "Social Outgoingness": "0-5",
+        "Excel Proficiency": "0-5",
+        "Business Planning Experience": "0-5"
+      }
+    }
+  ]
+}
