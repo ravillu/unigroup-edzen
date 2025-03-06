@@ -4,12 +4,14 @@ import { Form, Student, Group } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, UserPlus2 } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,10 +26,10 @@ export default function GroupViewPage() {
     queryKey: [`/api/forms/${formId}`],
     enabled: formId !== null,
     retry: 3,
-    staleTime: 0, // Always fetch fresh data
+    staleTime: 0,
   });
 
-  // Fetch students with proper error handling
+  // Fetch students
   const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
     queryKey: [`/api/forms/${formId}/students`],
     enabled: formId !== null && !!form,
@@ -35,7 +37,7 @@ export default function GroupViewPage() {
     staleTime: 0,
   });
 
-  // Fetch groups with proper error handling
+  // Fetch groups
   const { data: groups = [], isLoading: groupsLoading } = useQuery<Group[]>({
     queryKey: [`/api/forms/${formId}/groups`],
     enabled: formId !== null && !!form,
@@ -83,6 +85,40 @@ export default function GroupViewPage() {
       });
     }
   });
+
+  const updateGroupMutation = useMutation({
+    mutationFn: async ({ groupId, studentIds }: { groupId: number; studentIds: number[] }) => {
+      const res = await apiRequest(
+        "PATCH",
+        `/api/groups/${groupId}`,
+        { studentIds }
+      );
+      if (!res.ok) throw new Error('Failed to update group');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
+    }
+  });
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const sourceGroupId = parseInt(result.source.droppableId);
+    const destGroupId = parseInt(result.destination.droppableId);
+    const studentId = parseInt(result.draggableId);
+
+    const sourceGroup = groups.find(g => g.id === sourceGroupId);
+    const destGroup = groups.find(g => g.id === destGroupId);
+
+    if (!sourceGroup || !destGroup) return;
+
+    const newSourceStudentIds = sourceGroup.studentIds.filter(id => id !== studentId);
+    const newDestStudentIds = [...destGroup.studentIds, studentId];
+
+    updateGroupMutation.mutateAsync({ groupId: sourceGroup.id, studentIds: newSourceStudentIds });
+    updateGroupMutation.mutateAsync({ groupId: destGroup.id, studentIds: newDestStudentIds });
+  };
 
   // Show loading state while initial data is being fetched
   if (formLoading) {
@@ -161,28 +197,27 @@ export default function GroupViewPage() {
               </div>
 
               <div className="space-y-4">
-                <Label>Skill Priorities (Higher value = more important)</Label>
+                <Label>Skill Priorities</Label>
                 {form?.questions.map((question: any) => (
                   <div key={question.id} className="grid gap-2">
                     <Label>{question.text}</Label>
-                    <div className="flex items-center gap-4">
-                      <Slider
-                        defaultValue={[skillPriorities[question.text] || 1]}
-                        max={5}
-                        min={1}
-                        step={1}
-                        onValueChange={([value]) => 
-                          setSkillPriorities(prev => ({
-                            ...prev,
-                            [question.text]: value
-                          }))
-                        }
-                        className="flex-1"
-                      />
-                      <span className="w-8 text-center">
-                        {skillPriorities[question.text] || 1}
-                      </span>
-                    </div>
+                    <RadioGroup
+                      defaultValue={String(skillPriorities[question.text] || 1)}
+                      onValueChange={(value) =>
+                        setSkillPriorities(prev => ({
+                          ...prev,
+                          [question.text]: parseInt(value)
+                        }))
+                      }
+                      className="flex items-center gap-4"
+                    >
+                      {[1, 2, 3, 4, 5].map((value) => (
+                        <div key={value} className="flex items-center space-x-2">
+                          <RadioGroupItem value={String(value)} id={`${question.id}-${value}`} />
+                          <Label htmlFor={`${question.id}-${value}`}>{value}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
                   </div>
                 ))}
               </div>
@@ -200,9 +235,8 @@ export default function GroupViewPage() {
 
         {/* Generated Groups */}
         {groups.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-4">Generated Groups</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="mt-8 space-y-8">
               {groups.map((group) => {
                 const groupStudents = students.filter(student =>
                   group.studentIds.includes(student.id)
@@ -217,37 +251,68 @@ export default function GroupViewPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-2">
-                        {groupStudents.map(student => (
-                          <div key={student.id} className="p-2 rounded-md bg-muted/50">
-                            <div className="font-medium">{student.name}</div>
-                            <div className="text-sm text-muted-foreground space-y-1">
-                              <div>
-                                {student.major} • {student.academicYear} • {student.nunStatus === 'Yes' ? 'NUin' : 'Non-NUin'}
-                              </div>
-                              <div>
-                                {student.gender} • {student.ethnicity}
-                              </div>
-                            </div>
-                            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                              {Object.entries(student.skills as Record<string, number>).map(
-                                ([skill, level]) => (
-                                  <div key={skill} className="flex justify-between">
-                                    <span>{skill}:</span>
-                                    <span className="font-mono">{level}</span>
-                                  </div>
-                                )
-                              )}
-                            </div>
+                      <Droppable droppableId={String(group.id)}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                          >
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Name</TableHead>
+                                  <TableHead>Demographics</TableHead>
+                                  {form.questions.map((q: any) => (
+                                    <TableHead key={q.id}>{q.text}</TableHead>
+                                  ))}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {groupStudents.map((student, index) => (
+                                  <Draggable
+                                    key={student.id}
+                                    draggableId={String(student.id)}
+                                    index={index}
+                                  >
+                                    {(provided) => (
+                                      <TableRow
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                      >
+                                        <TableCell className="font-medium">
+                                          {student.name}
+                                          <div className="text-sm text-muted-foreground">
+                                            {student.major} • {student.academicYear}
+                                          </div>
+                                        </TableCell>
+                                        <TableCell>
+                                          {student.gender} • {student.ethnicity}
+                                          <div className="text-sm text-muted-foreground">
+                                            {student.nunStatus === 'Yes' ? 'NUin' : 'Non-NUin'}
+                                          </div>
+                                        </TableCell>
+                                        {form.questions.map((q: any) => (
+                                          <TableCell key={q.id} className="font-mono">
+                                            {(student.skills as any)[q.text]}
+                                          </TableCell>
+                                        ))}
+                                      </TableRow>
+                                    )}
+                                  </Draggable>
+                                ))}
+                                {provided.placeholder}
+                              </TableBody>
+                            </Table>
                           </div>
-                        ))}
-                      </div>
+                        )}
+                      </Droppable>
                     </CardContent>
                   </Card>
                 );
               })}
             </div>
-          </div>
+          </DragDropContext>
         )}
       </div>
     </div>
