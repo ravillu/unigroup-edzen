@@ -12,26 +12,26 @@ function renderSkillLevel(level: number): string {
 }
 
 export default function FormResponsesPage() {
-  const { id } = useParams<{ id: string }>();
-  const formId = parseInt(id || '0');
+  const params = useParams();
+  const formId = params?.id ? parseInt(params.id) : null;
 
   // Debug logs
   console.log('Attempting to load form:', {
-    rawId: id,
-    parsedId: formId,
-    isValid: !isNaN(formId) && formId > 0
+    params,
+    formId,
+    isValid: !isNaN(formId as number) && formId !== null
   });
 
   // Fetch form data with strict type checking
   const { data: form, isLoading: formLoading } = useQuery<Form>({
-    queryKey: ['/api/forms', formId],
-    enabled: !isNaN(formId) && formId > 0,
+    queryKey: [`/api/forms/${formId}`],
+    enabled: !isNaN(formId as number) && formId !== null,
   });
 
   // Fetch students with real-time updates
   const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
-    queryKey: ['/api/forms', formId, 'students'],
-    enabled: !isNaN(formId) && formId > 0,
+    queryKey: [`/api/forms/${formId}/students`],
+    enabled: !isNaN(formId as number) && formId !== null,
     refetchInterval: 5000, // Real-time updates every 5 seconds
   });
 
@@ -39,8 +39,8 @@ export default function FormResponsesPage() {
   console.log('Form loaded:', form);
   console.log('Students loaded:', students);
 
-  // Invalid form ID
-  if (isNaN(formId) || formId <= 0) {
+  // Invalid form ID state
+  if (!formId || isNaN(formId)) {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-7xl mx-auto">
@@ -49,9 +49,9 @@ export default function FormResponsesPage() {
               <p className="text-muted-foreground">Invalid form URL. Please check the link and try again.</p>
               <pre className="mt-4 text-xs bg-muted p-4 rounded">
                 Debug Info:
-                Raw ID: {id}
-                Parsed ID: {formId}
-                Is Valid: {(!isNaN(formId) && formId > 0).toString()}
+                Raw params: {JSON.stringify(params)}
+                Form ID: {formId}
+                Is Valid: {(!isNaN(formId as number) && formId !== null).toString()}
               </pre>
             </CardContent>
           </Card>
@@ -76,7 +76,7 @@ export default function FormResponsesPage() {
     );
   }
 
-  // Form not found
+  // Form not found state
   if (!form) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -87,7 +87,7 @@ export default function FormResponsesPage() {
               <pre className="mt-4 text-xs bg-muted p-4 rounded">
                 Debug Info:
                 Form ID: {formId}
-                Query Key: {JSON.stringify(['/api/forms', formId])}
+                Query Key: {JSON.stringify([`/api/forms/${formId}`])}
               </pre>
             </CardContent>
           </Card>
@@ -96,7 +96,6 @@ export default function FormResponsesPage() {
     );
   }
 
-  // Render the responses page
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
