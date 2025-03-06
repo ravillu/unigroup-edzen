@@ -70,7 +70,7 @@ export default function LandingPage() {
             <motion.img
               src={LogoImage}
               alt="EdZen AI Logo"
-              className="h-24 object-contain"
+              className="h-32 md:h-40 object-contain"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
@@ -198,7 +198,7 @@ export default function LandingPage() {
             <img
               src={LogoImage}
               alt="EdZen AI Logo"
-              className="h-12 mx-auto mb-4"
+              className="h-16 mx-auto mb-6"
             />
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} UniGroup by EdZen AI™. All rights reserved.
