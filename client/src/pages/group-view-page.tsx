@@ -135,14 +135,15 @@ export default function GroupViewPage() {
           <CardHeader>
             <CardTitle>Group Configuration</CardTitle>
             <CardDescription>
-              Configure group size and skill priorities for optimal group formation.
-              The algorithm:
-              1. Sorts students by skill scores within each gender group
-              2. Distributes students using a snake pattern to ensure:
-                 - Even gender distribution
-                 - Balanced skill levels across groups
-                 - Mixed academic years and NUin status
-              3. Maintains proportional ethnic representation
+              Advanced AI-driven group formation algorithm that:
+              1. Prioritizes students with key skills (rated 4-5)
+              2. Ensures balanced distribution across groups:
+                 • Gender balance
+                 • Ethnic diversity
+                 • Academic year mix
+                 • NUin status distribution
+              3. Optimizes skill complementarity within groups
+              4. Uses backtracking for constraint satisfaction
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -160,7 +161,7 @@ export default function GroupViewPage() {
               </div>
 
               <div className="space-y-4">
-                <Label>Skill Priorities</Label>
+                <Label>Skill Priorities (Higher value = more important)</Label>
                 {form?.questions.map((question: any) => (
                   <div key={question.id} className="grid gap-2">
                     <Label>{question.text}</Label>

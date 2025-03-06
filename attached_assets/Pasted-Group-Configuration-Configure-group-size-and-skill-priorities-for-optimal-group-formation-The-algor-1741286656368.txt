@@ -1,0 +1,118 @@
+Group Configuration
+Configure group size and skill priorities for optimal group formation. The algorithm: 1. Sorts students by skill scores within each gender group 2. Distributes students using a snake pattern to ensure: - Even gender distribution - Balanced skill levels across groups - Mixed academic years and NUin status 3. Maintains proportional ethnic representation
+
+Group Size
+3
+Skill Priorities
+Public Speaking Comfort
+2
+Writing Ability
+3
+Social Outgoingness
+2
+Excel Proficiency
+3
+Business Planning Experience
+5
+Generate Groups
+Generated Groups
+Group 1
+1 members
+
+Sven T Olson
+FINTECH - Financial Technology • Freshman • Non-NUin
+Female • Asian
+Writing Ability:
+0
+Excel Proficiency:
+5
+Social Outgoingness:
+1
+Public Speaking Comfort:
+1
+Business Planning Experience:
+5
+Group 2
+3 members
+
+Sreevats Ramesh Ravillu
+FIN - Finance • Sophomore • Non-NUin
+Male • Asian
+Writing Ability:
+2
+Excel Proficiency:
+4
+Social Outgoingness:
+1
+Public Speaking Comfort:
+2
+Business Planning Experience:
+5
+Sreevats Ramesh Ravillu
+FINTECH - Financial Technology • Freshman • Non-NUin
+Female • American Indian or Alaska Native
+Writing Ability:
+1
+Excel Proficiency:
+4
+Social Outgoingness:
+2
+Public Speaking Comfort:
+1
+Business Planning Experience:
+3
+Sreevats
+FINTECH - Financial Technology • Sophomore • Non-NUin
+Female • Asian
+Writing Ability:
+1
+Excel Proficiency:
+5
+Social Outgoingness:
+2
+Public Speaking Comfort:
+1
+Business Planning Experience:
+4
+Group 3
+3 members
+
+Sreevats Ramesh Ravillu
+FIN - Finance • Sophomore • Non-NUin
+Female • Black or African American
+Writing Ability:
+1
+Excel Proficiency:
+4
+Social Outgoingness:
+1
+Public Speaking Comfort:
+2
+Business Planning Experience:
+3
+Sven T Olson
+FINTECH - Financial Technology • Sophomore • Non-NUin
+Female • Asian
+Writing Ability:
+2
+Excel Proficiency:
+4
+Social Outgoingness:
+3
+Public Speaking Comfort:
+1
+Business Planning Experience:
+3
+Sven T Olson
+Explore Business • Freshman • Non-NUin
+Non-binary • Asian
+Writing Ability:
+2
+Excel Proficiency:
+4
+Social Outgoingness:
+2
+Public Speaking Comfort:
+1
+Business Planning Experience:
+5

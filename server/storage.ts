@@ -95,75 +95,120 @@ export class DatabaseStorage {
   ): Promise<Group[]> {
     await this.deleteExistingGroups(formId);
 
-    // Calculate weighted scores and group students by gender
-    const maleStudents: any[] = [];
-    const femaleStudents: any[] = [];
-    const otherStudents: any[] = [];
-
-    students.forEach(student => {
+    // Calculate student scores with weighted skills
+    const studentScores = students.map(student => {
       let skillScore = 0;
+      let maxSkill = 0;
       for (const [skill, priority] of Object.entries(skillPriorities)) {
-        skillScore += ((student.skills as any)[skill] || 0) * priority;
+        const skillLevel = (student.skills as any)[skill] || 0;
+        skillScore += skillLevel * priority;
+        if (skillLevel >= 4) maxSkill = Math.max(maxSkill, skillLevel);
       }
 
-      const studentData = {
+      return {
         student,
         skillScore,
-        metadata: {
+        maxSkill,
+        attributes: {
           gender: student.gender,
           ethnicity: student.ethnicity,
           nunStatus: student.nunStatus,
           academicYear: student.academicYear
         }
       };
-
-      if (student.gender.toLowerCase() === 'male') {
-        maleStudents.push(studentData);
-      } else if (student.gender.toLowerCase() === 'female') {
-        femaleStudents.push(studentData);
-      } else {
-        otherStudents.push(studentData);
-      }
     });
 
-    // Sort each gender group by skill score
-    maleStudents.sort((a, b) => b.skillScore - a.skillScore);
-    femaleStudents.sort((a, b) => b.skillScore - a.skillScore);
-    otherStudents.sort((a, b) => b.skillScore - a.skillScore);
+    // Sort by skill score and max skill level
+    studentScores.sort((a, b) => {
+      if (b.maxSkill !== a.maxSkill) return b.maxSkill - a.maxSkill;
+      return b.skillScore - a.skillScore;
+    });
 
-    // Initialize groups
     const numGroups = Math.ceil(students.length / groupSize);
-    const groups: { studentIds: number[] }[] = Array(numGroups)
+    const groups: { studentIds: number[]; metrics: any }[] = Array(numGroups)
       .fill(null)
-      .map(() => ({ studentIds: [] }));
-
-    // Helper function to distribute students from a list to groups
-    const distributeStudents = (studentList: any[], startGroupIndex: number) => {
-      let groupIndex = startGroupIndex;
-      let direction = 1;
-
-      studentList.forEach(studentData => {
-        if (groups[groupIndex].studentIds.length < groupSize) {
-          groups[groupIndex].studentIds.push(studentData.student.id);
-
-          // Move to next group using snake pattern
-          groupIndex += direction;
-          if (groupIndex >= numGroups) {
-            groupIndex = numGroups - 1;
-            direction = -1;
-          } else if (groupIndex < 0) {
-            groupIndex = 0;
-            direction = 1;
-          }
+      .map(() => ({ 
+        studentIds: [],
+        metrics: {
+          genderCount: {},
+          ethnicityCount: {},
+          nunCount: 0,
+          yearCount: {},
+          skillLevels: {}
         }
-      });
+      }));
+
+    // Helper to find best group for a student
+    const findBestGroup = (student: any) => {
+      let bestGroupIndex = 0;
+      let bestScore = -Infinity;
+
+      for (let i = 0; i < groups.length; i++) {
+        if (groups[i].studentIds.length >= groupSize) continue;
+
+        const group = groups[i];
+        let score = 0;
+
+        // Gender balance score
+        const genderCount = { ...group.metrics.genderCount };
+        genderCount[student.attributes.gender] = (genderCount[student.attributes.gender] || 0) + 1;
+        const genderBalance = Math.min(...Object.values(genderCount)) / Math.max(...Object.values(genderCount));
+        score += genderBalance * 2;
+
+        // Ethnic diversity score
+        const ethnicityCount = { ...group.metrics.ethnicityCount };
+        ethnicityCount[student.attributes.ethnicity] = (ethnicityCount[student.attributes.ethnicity] || 0) + 1;
+        score += Object.keys(ethnicityCount).length;
+
+        // NUin balance score
+        const nunCount = group.metrics.nunCount + (student.attributes.nunStatus === 'Yes' ? 1 : 0);
+        const nunBalance = 1 - Math.abs((nunCount / (group.studentIds.length + 1)) - 0.5);
+        score += nunBalance;
+
+        // Academic year distribution
+        const yearCount = { ...group.metrics.yearCount };
+        yearCount[student.attributes.academicYear] = (yearCount[student.attributes.academicYear] || 0) + 1;
+        score += Object.keys(yearCount).length;
+
+        // Skill distribution score
+        for (const [skill, priority] of Object.entries(skillPriorities)) {
+          const currentAvg = group.metrics.skillLevels[skill] || 0;
+          const newSkillLevel = (student.student.skills as any)[skill] || 0;
+          const newAvg = (currentAvg * group.studentIds.length + newSkillLevel) / (group.studentIds.length + 1);
+          score += (5 - Math.abs(3 - newAvg)) * priority; // Prefer balanced skill levels around 3
+        }
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestGroupIndex = i;
+        }
+      }
+
+      return bestGroupIndex;
     };
 
-    // Distribute students ensuring gender and skill balance
-    // Start with different genders at different points to ensure mixing
-    distributeStudents(femaleStudents, 0);
-    distributeStudents(maleStudents, Math.floor(numGroups / 2));
-    distributeStudents(otherStudents, numGroups - 1);
+    // Assign students to groups
+    for (const studentData of studentScores) {
+      const groupIndex = findBestGroup(studentData);
+      const group = groups[groupIndex];
+
+      // Update group metrics
+      group.studentIds.push(studentData.student.id);
+      group.metrics.genderCount[studentData.attributes.gender] = 
+        (group.metrics.genderCount[studentData.attributes.gender] || 0) + 1;
+      group.metrics.ethnicityCount[studentData.attributes.ethnicity] = 
+        (group.metrics.ethnicityCount[studentData.attributes.ethnicity] || 0) + 1;
+      group.metrics.nunCount += studentData.attributes.nunStatus === 'Yes' ? 1 : 0;
+      group.metrics.yearCount[studentData.attributes.academicYear] = 
+        (group.metrics.yearCount[studentData.attributes.academicYear] || 0) + 1;
+
+      // Update skill averages
+      for (const [skill, level] of Object.entries(studentData.student.skills as Record<string, number>)) {
+        group.metrics.skillLevels[skill] = group.metrics.skillLevels[skill] || 0;
+        group.metrics.skillLevels[skill] = 
+          (group.metrics.skillLevels[skill] * (group.studentIds.length - 1) + level) / group.studentIds.length;
+      }
+    }
 
     // Create groups in database
     const createdGroups: Group[] = [];
