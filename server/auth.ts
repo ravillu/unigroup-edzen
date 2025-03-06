@@ -38,6 +38,12 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax'
+    }
   };
 
   app.set("trust proxy", 1);
@@ -112,9 +118,11 @@ export function setupAuth(app: Express) {
 
   app.post("/api/logout", (req, res, next) => {
     const userId = req.user?.id;
-    req.logout((err) => {
+    // Clear the entire session
+    req.session.destroy((err) => {
       if (err) return next(err);
       console.log('User logged out:', { id: userId });
+      res.clearCookie('connect.sid');
       res.sendStatus(200);
     });
   });
