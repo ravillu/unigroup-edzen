@@ -1,7 +1,7 @@
 import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Form, Student, Group } from "@shared/schema";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,6 +13,38 @@ import {
 import { Button } from "@/components/ui/button";
 import { RefreshCw, UserPlus2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+
+function renderSkillLevel(level: number): string {
+  const stars = "★".repeat(level);
+  const emptyStars = "☆".repeat(5 - level);
+  return stars + emptyStars;
+}
+
+function calculateGroupFitness(group: Student[], candidate: Student): number {
+  // Simple fitness calculation based on skill diversity
+  if (group.length === 0) return 1;
+  
+  // Calculate average skills for the current group
+  const groupSkills: Record<string, number> = {};
+  for (const student of group) {
+    const skills = student.skills as Record<string, number>;
+    for (const [skill, level] of Object.entries(skills)) {
+      if (!groupSkills[skill]) groupSkills[skill] = 0;
+      groupSkills[skill] += level;
+    }
+  }
+  
+  // Calculate fitness based on how the candidate's skills complement the group
+  let fitness = 0;
+  const candidateSkills = candidate.skills as Record<string, number>;
+  for (const [skill, level] of Object.entries(candidateSkills)) {
+    const avgGroupSkill = (groupSkills[skill] || 0) / group.length;
+    // Higher fitness if this skill balances the group
+    fitness += Math.abs(avgGroupSkill - level);
+  }
+  
+  return fitness;
+}
 
 function calculateGroupFitness(group: Student[], newStudent: Student): number {
   let fitness = 0;
@@ -112,6 +144,34 @@ export default function GroupViewPage() {
       // Advanced group generation algorithm
       const numGroups = Math.ceil(students.length / 4); // Aim for 4-5 students per group
       const newGroups: Student[][] = Array.from({ length: numGroups }, () => []);
+      
+      // Create a copy of students array to work with
+      const unassignedStudents = [...students];
+      
+      // First pass: distribute students evenly
+      for (let i = 0; i < unassignedStudents.length; i++) {
+        const groupIndex = i % numGroups;
+        newGroups[groupIndex].push(unassignedStudents[i]);
+      }
+      
+      // Convert student groups to the format expected by the API
+      const groupsToCreate = newGroups.map((group, index) => ({
+        formId,
+        name: `Group ${index + 1}`,
+        studentIds: group.map(student => student.id)
+      }));
+      
+      // Create the groups via API
+      for (const group of groupsToCreate) {
+        await apiRequest("POST", `/api/forms/${formId}/groups`, group);
+      }
+      
+      return await apiRequest("GET", `/api/forms/${formId}/groups`).then(r => r.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
+    },
+  });
 
       // Sort students by skill level (prioritize high skills)
       const sortedStudents = [...students].sort((a, b) => {
@@ -231,32 +291,113 @@ export default function GroupViewPage() {
             </CardContent>
           </Card>
         ) : groups.length === 0 ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Student Submissions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>NUID</TableHead>
-                    <TableHead>Major</TableHead>
-                    <TableHead>Skills</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {students.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell>{student.name}</TableCell>
-                      <TableCell>{student.nuid}</TableCell>
-                      <TableCell>{student.major}</TableCell>
-                      <TableCell>
-                        {Object.entries(student.skills as Record<string, number>).map(
-                          ([skill, level]) => (
-                            <div key={skill} className="text-sm">
-                              {skill}: {renderSkillLevel(level)}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Submissions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>NUID</TableHead>
+                      <TableHead>Major</TableHead>
+                      <TableHead>Skills</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {students.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell>{student.name}</TableCell>
+                        <TableCell>{student.nuid}</TableCell>
+                        <TableCell>{student.major}</TableCell>
+                        <TableCell>
+                          {Object.entries(student.skills as Record<string, number>).map(
+                            ([skill, level]) => (
+                              <div key={skill} className="text-sm">
+                                {skill}: {renderSkillLevel(level)}
+                              </div>
+                            )
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Generate Groups</CardTitle>
+                <CardDescription>
+                  Click the button below to automatically generate balanced student groups
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => generateGroupsMutation.mutate()} 
+                  disabled={generateGroupsMutation.isPending}
+                >
+                  {generateGroupsMutation.isPending ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Generate Groups
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-3xl font-bold">Generated Groups</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => generateGroupsMutation.mutate()}
+                disabled={generateGroupsMutation.isPending}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Regenerate
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {groups.map((group) => {
+                const groupStudents = students.filter(student => 
+                  group.studentIds.includes(student.id)
+                );
+                
+                return (
+                  <Card key={group.id}>
+                    <CardHeader>
+                      <CardTitle>{group.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {groupStudents.map(student => (
+                          <div key={student.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/50">
+                            <div>
+                              <div className="font-medium">{student.name}</div>
+                              <div className="text-sm text-muted-foreground">{student.major}</div>
                             </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
                           )
                         )}
                       </TableCell>
