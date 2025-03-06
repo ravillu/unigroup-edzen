@@ -137,14 +137,12 @@ export default function GroupViewPage() {
             <CardDescription>
               Configure group size and skill priorities for optimal group formation.
               The algorithm:
-              1. Calculates weighted skill scores based on your priorities
-              2. Ensures balanced distribution of high-skill students
-              3. Optimizes for diversity in:
-                 - Gender balance
-                 - Ethnic representation
-                 - Academic year mix
-                 - NUin/Non-NUin ratio
-              4. Maintains even group sizes
+              1. Sorts students by skill scores within each gender group
+              2. Distributes students using a snake pattern to ensure:
+                 - Even gender distribution
+                 - Balanced skill levels across groups
+                 - Mixed academic years and NUin status
+              3. Maintains proportional ethnic representation
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -230,12 +228,12 @@ export default function GroupViewPage() {
                                 {student.gender} • {student.ethnicity}
                               </div>
                             </div>
-                            <div className="mt-2 space-y-1 text-sm">
+                            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                               {Object.entries(student.skills as Record<string, number>).map(
                                 ([skill, level]) => (
                                   <div key={skill} className="flex justify-between">
                                     <span>{skill}:</span>
-                                    <span className="font-mono">{level}/5</span>
+                                    <span className="font-mono">{level}</span>
                                   </div>
                                 )
                               )}

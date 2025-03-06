@@ -87,25 +87,26 @@ export class DatabaseStorage {
     await db.delete(groups).where(eq(groups.formId, formId));
   }
 
-  // Group generation method
   async generateGroups(
     formId: number,
     students: Student[],
     groupSize: number,
     skillPriorities: Record<string, number>
   ): Promise<Group[]> {
-    // Delete existing groups first
     await this.deleteExistingGroups(formId);
 
-    // Calculate student scores and metadata
-    const studentScores = students.map(student => {
-      // Calculate weighted skill score
+    // Calculate weighted scores and group students by gender
+    const maleStudents: any[] = [];
+    const femaleStudents: any[] = [];
+    const otherStudents: any[] = [];
+
+    students.forEach(student => {
       let skillScore = 0;
       for (const [skill, priority] of Object.entries(skillPriorities)) {
         skillScore += ((student.skills as any)[skill] || 0) * priority;
       }
 
-      return {
+      const studentData = {
         student,
         skillScore,
         metadata: {
@@ -115,81 +116,66 @@ export class DatabaseStorage {
           academicYear: student.academicYear
         }
       };
+
+      if (student.gender.toLowerCase() === 'male') {
+        maleStudents.push(studentData);
+      } else if (student.gender.toLowerCase() === 'female') {
+        femaleStudents.push(studentData);
+      } else {
+        otherStudents.push(studentData);
+      }
     });
 
-    // Sort students by skill score
-    studentScores.sort((a, b) => b.skillScore - a.skillScore);
+    // Sort each gender group by skill score
+    maleStudents.sort((a, b) => b.skillScore - a.skillScore);
+    femaleStudents.sort((a, b) => b.skillScore - a.skillScore);
+    otherStudents.sort((a, b) => b.skillScore - a.skillScore);
 
-    // Calculate number of groups
+    // Initialize groups
     const numGroups = Math.ceil(students.length / groupSize);
     const groups: { studentIds: number[] }[] = Array(numGroups)
       .fill(null)
       .map(() => ({ studentIds: [] }));
 
-    // Helper function to calculate group diversity score
-    const calculateGroupDiversity = (group: number[], newStudent: any) => {
-      const groupStudents = group.map(id => 
-        studentScores.find(s => s.student.id === id)!
-      );
+    // Helper function to distribute students from a list to groups
+    const distributeStudents = (studentList: any[], startGroupIndex: number) => {
+      let groupIndex = startGroupIndex;
+      let direction = 1;
 
-      let diversityScore = 0;
+      studentList.forEach(studentData => {
+        if (groups[groupIndex].studentIds.length < groupSize) {
+          groups[groupIndex].studentIds.push(studentData.student.id);
 
-      // Check gender balance
-      const genderCounts = new Map();
-      [...groupStudents, newStudent].forEach(s => {
-        genderCounts.set(s.metadata.gender, (genderCounts.get(s.metadata.gender) || 0) + 1);
+          // Move to next group using snake pattern
+          groupIndex += direction;
+          if (groupIndex >= numGroups) {
+            groupIndex = numGroups - 1;
+            direction = -1;
+          } else if (groupIndex < 0) {
+            groupIndex = 0;
+            direction = 1;
+          }
+        }
       });
-      diversityScore += Math.min(...Array.from(genderCounts.values())) / Math.max(...Array.from(genderCounts.values()));
-
-      // Check ethnicity diversity
-      const ethnicityCounts = new Map();
-      [...groupStudents, newStudent].forEach(s => {
-        ethnicityCounts.set(s.metadata.ethnicity, (ethnicityCounts.get(s.metadata.ethnicity) || 0) + 1);
-      });
-      diversityScore += ethnicityCounts.size / ([...groupStudents, newStudent].length);
-
-      // Check NUin status mix
-      const nuinCount = [...groupStudents, newStudent].filter(s => s.metadata.nunStatus === 'Yes').length;
-      diversityScore += Math.abs(nuinCount - ([...groupStudents, newStudent].length / 2)) * -1;
-
-      // Check academic year distribution
-      const yearCounts = new Map();
-      [...groupStudents, newStudent].forEach(s => {
-        yearCounts.set(s.metadata.academicYear, (yearCounts.get(s.metadata.academicYear) || 0) + 1);
-      });
-      diversityScore += yearCounts.size / ([...groupStudents, newStudent].length);
-
-      return diversityScore;
     };
 
-    // Distribute students ensuring skill and diversity balance
-    for (const studentData of studentScores) {
-      // Find the best group for this student
-      let bestGroupIndex = 0;
-      let bestDiversityScore = -Infinity;
-
-      for (let i = 0; i < groups.length; i++) {
-        if (groups[i].studentIds.length >= groupSize) continue;
-
-        const diversityScore = calculateGroupDiversity(groups[i].studentIds, studentData);
-        if (diversityScore > bestDiversityScore) {
-          bestDiversityScore = diversityScore;
-          bestGroupIndex = i;
-        }
-      }
-
-      groups[bestGroupIndex].studentIds.push(studentData.student.id);
-    }
+    // Distribute students ensuring gender and skill balance
+    // Start with different genders at different points to ensure mixing
+    distributeStudents(femaleStudents, 0);
+    distributeStudents(maleStudents, Math.floor(numGroups / 2));
+    distributeStudents(otherStudents, numGroups - 1);
 
     // Create groups in database
     const createdGroups: Group[] = [];
     for (let i = 0; i < groups.length; i++) {
-      const group = await this.createGroup({
-        formId,
-        name: `Group ${i + 1}`,
-        studentIds: groups[i].studentIds
-      });
-      createdGroups.push(group);
+      if (groups[i].studentIds.length > 0) {
+        const group = await this.createGroup({
+          formId,
+          name: `Group ${i + 1}`,
+          studentIds: groups[i].studentIds
+        });
+        createdGroups.push(group);
+      }
     }
 
     return createdGroups;
