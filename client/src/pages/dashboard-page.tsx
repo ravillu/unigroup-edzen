@@ -1,18 +1,41 @@
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Form } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ClipboardCopy, FileText } from "lucide-react";
+import { Plus, ClipboardCopy, FileText, Database } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function DashboardPage() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: forms = [], isLoading } = useQuery<Form[]>({
     queryKey: ["/api/forms"],
+  });
+
+  const seedTestDataMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/forms/seed-test");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/forms"] });
+      toast({
+        title: "Success",
+        description: "Test form has been created with sample data",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create test form",
+        variant: "destructive",
+      });
+    },
   });
 
   const copyToClipboard = (formId: number) => {
@@ -44,12 +67,22 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold">Your Forms</h2>
-          <Link href="/forms/new">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create New Form
+          <div className="flex gap-4">
+            <Button
+              variant="outline"
+              onClick={() => seedTestDataMutation.mutate()}
+              disabled={seedTestDataMutation.isPending}
+            >
+              <Database className="mr-2 h-4 w-4" />
+              Create Test Form
             </Button>
-          </Link>
+            <Link href="/forms/new">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create New Form
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {isLoading ? (
