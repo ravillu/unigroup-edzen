@@ -47,51 +47,84 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const user = await storage.getUserByUsername(username);
-      if (!user || !user.password || !(await comparePasswords(password, user.password))) {
-        return done(null, false);
-      } else {
+      try {
+        const user = await storage.getUserByUsername(username);
+        if (!user || !user.password || !(await comparePasswords(password, user.password))) {
+          return done(null, false);
+        }
+        console.log('User authenticated:', { username, hasCanvasToken: !!user.canvasToken });
         return done(null, user);
+      } catch (error) {
+        console.error('Authentication error:', error);
+        return done(error);
       }
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log('Serializing user:', { id: user.id, hasCanvasToken: !!user.canvasToken });
+    done(null, user.id);
+  });
+
   passport.deserializeUser(async (id: number, done) => {
-    const user = await storage.getUser(id);
-    done(null, user);
+    try {
+      const user = await storage.getUser(id);
+      console.log('Deserialized user:', { id, hasCanvasToken: !!user?.canvasToken });
+      done(null, user);
+    } catch (error) {
+      console.error('Deserialization error:', error);
+      done(error);
+    }
   });
 
   app.post("/api/register", async (req, res, next) => {
-    const existingUser = await storage.getUserByUsername(req.body.username);
-    if (existingUser) {
-      return res.status(400).send("Username already exists");
+    try {
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).send("Username already exists");
+      }
+
+      const user = await storage.createUser({
+        ...req.body,
+        password: await hashPassword(req.body.password),
+      });
+
+      console.log('User registered:', { id: user.id, username: user.username });
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(user);
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      next(error);
     }
-
-    const user = await storage.createUser({
-      ...req.body,
-      password: await hashPassword(req.body.password),
-    });
-
-    req.login(user, (err) => {
-      if (err) return next(err);
-      res.status(201).json(user);
-    });
   });
 
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
+    console.log('User logged in:', { 
+      id: req.user?.id, 
+      username: req.user?.username,
+      hasCanvasToken: !!req.user?.canvasToken 
+    });
     res.status(200).json(req.user);
   });
 
   app.post("/api/logout", (req, res, next) => {
+    const userId = req.user?.id;
     req.logout((err) => {
       if (err) return next(err);
+      console.log('User logged out:', { id: userId });
       res.sendStatus(200);
     });
   });
 
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log('User info requested:', { 
+      id: req.user?.id,
+      hasCanvasToken: !!req.user?.canvasToken 
+    });
     res.json(req.user);
   });
 }

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Form,
   FormControl,
@@ -45,23 +47,43 @@ export default function CanvasIntegrationPage() {
   const [, setLocation] = useLocation();
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [step, setStep] = useState(1);
-  const user = null; // Placeholder, needs to be fetched from context or similar
+  const { user } = useAuth();
 
   const form = useForm<CanvasConfigForm>({
     resolver: zodResolver(canvasConfigSchema),
   });
 
+  const updateCanvasCredentialsMutation = useMutation({
+    mutationFn: async (values: CanvasConfigForm) => {
+      const res = await apiRequest("PATCH", "/api/user/canvas", values);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      toast({
+        title: "Canvas credentials updated",
+        description: "Successfully connected to Canvas",
+      });
+      setStep(4);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update Canvas credentials",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Fetch Canvas courses
   const { data: courses = [], isLoading: coursesLoading, error: coursesError } = useQuery<CanvasCourse[]>({
     queryKey: ["/api/canvas/courses"],
-    enabled: !!user?.canvasToken, //Conditionally enable based on user's token.  Replace null with actual user data.
+    enabled: !!user?.canvasToken,
     retry: 1,
   });
 
-  // Fetch students for selected course
-  const { data: students = [], isLoading: studentsLoading } = useQuery<CanvasStudent[]>({
-    queryKey: [`/api/canvas/courses/${selectedCourseId}/students`],
-    enabled: selectedCourseId !== null,
+  const handleSubmit = form.handleSubmit((data) => {
+    updateCanvasCredentialsMutation.mutate(data);
   });
 
   return (
@@ -186,7 +208,7 @@ export default function CanvasIntegrationPage() {
               </CardHeader>
               <CardContent>
                 <Form {...form}>
-                  <form className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
                     <FormField
                       control={form.control}
                       name="canvasInstanceUrl"
@@ -228,7 +250,7 @@ export default function CanvasIntegrationPage() {
                       <Button variant="outline" onClick={() => setStep(2)}>
                         Back
                       </Button>
-                      <Button onClick={() => setStep(4)} type="submit">
+                      <Button type="submit">
                         Connect to Canvas
                         <ChevronRight className="ml-2 h-4 w-4" />
                       </Button>
@@ -253,34 +275,11 @@ export default function CanvasIntegrationPage() {
                     <Loader2 className="h-8 w-8 animate-spin" />
                   </div>
                 ) : coursesError ? (
-                  <div className="text-center space-y-4">
-                    <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
-                    <h3 className="text-lg font-semibold">Canvas Connection Failed</h3>
-                    <p className="text-muted-foreground">
+                  <div className="mt-4 p-4 border border-red-200 rounded-lg bg-red-50">
+                    <h3 className="text-red-700 font-semibold">Canvas Connection Error</h3>
+                    <p className="text-red-600">
                       {coursesError instanceof Error ? coursesError.message : "Failed to connect to Canvas"}
                     </p>
-                    <div className="flex gap-4 mt-4">
-                      <Button
-                        variant="outline"
-                        onClick={() => setStep(3)}
-                        className="flex-1"
-                      >
-                        Try Again
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          toast({
-                            title: "Canvas Integration Skipped",
-                            description: "You can set this up later from your dashboard settings.",
-                          });
-                          setLocation("/");
-                        }}
-                        className="flex-1"
-                      >
-                        Skip for Now
-                      </Button>
-                    </div>
                   </div>
                 ) : courses.length > 0 ? (
                   <div className="space-y-4">

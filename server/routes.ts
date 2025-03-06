@@ -202,6 +202,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add this route handler in the appropriate section of routes.ts
+  app.patch("/api/user/canvas", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { canvasInstanceUrl, canvasToken } = req.body;
+
+      // Test the Canvas credentials before saving
+      const testService = createCanvasService({
+        ...req.user,
+        canvasInstanceUrl,
+        canvasToken
+      });
+
+      // Try to fetch courses to verify credentials
+      await testService.getCourses();
+
+      // Update user with new Canvas credentials
+      const updatedUser = await storage.updateUser(req.user.id, {
+        canvasInstanceUrl,
+        canvasToken
+      });
+
+      // Update session
+      req.session.canvasToken = canvasToken;
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Failed to update Canvas credentials:', error);
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Failed to update Canvas credentials" 
+      });
+    }
+  });
+
 
   // Forms
   app.post("/api/forms", async (req, res) => {
