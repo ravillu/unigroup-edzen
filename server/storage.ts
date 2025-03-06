@@ -62,6 +62,23 @@ export class DatabaseStorage {
     return user;
   }
 
+  async updateUser(id: number, data: Partial<User>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return user;
+  }
+
   // Form methods with institution support
   async createForm(insertForm: InsertForm): Promise<Form> {
     const [form] = await db.insert(forms).values(insertForm).returning();
