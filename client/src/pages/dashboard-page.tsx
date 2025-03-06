@@ -52,9 +52,14 @@ export default function DashboardPage() {
   const deleteFormMutation = useMutation({
     mutationFn: async (formId: number) => {
       const res = await apiRequest("DELETE", `/api/forms/${formId}`);
-      if (!res.ok) throw new Error("Failed to delete form");
+      if (!res.ok) throw new Error('Failed to delete form');
+      return formId;
     },
-    onSuccess: () => {
+    onSuccess: (formId) => {
+      // Optimistically update the UI by removing the deleted form
+      queryClient.setQueryData<Form[]>(["/api/forms"], (oldData) => 
+        oldData?.filter(form => form.id !== formId) || []
+      );
       queryClient.invalidateQueries({ queryKey: ["/api/forms"] });
       toast({
         title: "Success",
