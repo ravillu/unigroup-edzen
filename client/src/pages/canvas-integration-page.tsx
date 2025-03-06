@@ -27,14 +27,6 @@ interface CanvasCourse {
   total_students: number;
 }
 
-interface CanvasStudent {
-  id: number;
-  name: string;
-  email: string;
-  sortable_name: string;
-  short_name: string;
-}
-
 const canvasConfigSchema = z.object({
   canvasInstanceUrl: z.string().url("Please enter a valid Canvas URL"),
   canvasToken: z.string().min(1, "API token is required"),
@@ -52,6 +44,14 @@ export default function CanvasIntegrationPage() {
   const form = useForm<CanvasConfigForm>({
     resolver: zodResolver(canvasConfigSchema),
   });
+
+  const skipCanvasSetup = async () => {
+    toast({
+      title: "Canvas Integration Skipped",
+      description: "You can set this up later from your dashboard settings.",
+    });
+    setLocation("/");
+  };
 
   const updateCanvasCredentialsMutation = useMutation({
     mutationFn: async (values: CanvasConfigForm) => {
@@ -75,7 +75,6 @@ export default function CanvasIntegrationPage() {
     },
   });
 
-  // Fetch Canvas courses
   const { data: courses = [], isLoading: coursesLoading, error: coursesError } = useQuery<CanvasCourse[]>({
     queryKey: ["/api/canvas/courses"],
     enabled: !!user?.canvasToken,
@@ -92,7 +91,7 @@ export default function CanvasIntegrationPage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/">
             <h1 className="text-2xl font-bold text-[#C41230] cursor-pointer">
-              NU Group Formation
+              UniGroup by EdZen AI
             </h1>
           </Link>
         </div>
@@ -151,13 +150,7 @@ export default function CanvasIntegrationPage() {
                   </p>
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      toast({
-                        title: "Canvas Integration Skipped",
-                        description: "You can set this up later from your dashboard settings.",
-                      });
-                      setLocation("/");
-                    }}
+                    onClick={skipCanvasSetup}
                     className="w-full"
                   >
                     Skip for Now
@@ -327,13 +320,7 @@ export default function CanvasIntegrationPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => {
-                          toast({
-                            title: "Canvas Integration Skipped",
-                            description: "You can set this up later from your dashboard settings.",
-                          });
-                          setLocation("/");
-                        }}
+                        onClick={skipCanvasSetup}
                         className="flex-1"
                       >
                         Skip for Now
