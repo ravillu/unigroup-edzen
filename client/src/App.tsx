@@ -12,6 +12,7 @@ import FormResponsesPage from "@/pages/form-responses-page";
 import StudentFormPage from "@/pages/student-form-page";
 import GroupViewPage from "@/pages/group-view-page";
 import CanvasIntegrationPage from "@/pages/canvas-integration-page";
+import InstitutionOnboardingPage from "@/pages/institution-onboarding-page";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/forms/:id/submit" component={StudentFormPage} />
       <Route path="/forms/:id/groups" component={GroupViewPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/institutions/register" component={InstitutionOnboardingPage} />
       <Route component={NotFound} />
     </Switch>
   );
