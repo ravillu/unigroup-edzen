@@ -15,10 +15,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "wouter";
 
 const loginSchema = insertUserSchema.pick({
   username: true,
@@ -27,14 +25,10 @@ const loginSchema = insertUserSchema.pick({
 
 const registerSchema = insertUserSchema.extend({
   email: z.string().email(),
-  canvasInstanceUrl: z.string().url(),
-  canvasToken: z.string(),
 }).pick({
   username: true,
   password: true,
   email: true,
-  canvasInstanceUrl: true,
-  canvasToken: true,
 });
 
 type LoginData = z.infer<typeof loginSchema>;
@@ -54,7 +48,12 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (user) {
-      setLocation("/");
+      // If user has no Canvas token, redirect to Canvas integration
+      if (!user.canvasToken) {
+        setLocation("/canvas");
+      } else {
+        setLocation("/");
+      }
     }
   }, [user, setLocation]);
 
@@ -164,46 +163,6 @@ export default function AuthPage() {
                           <FormControl>
                             <Input type="password" {...field} />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={registerForm.control}
-                      name="canvasInstanceUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Canvas Instance URL</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="e.g. https://northeastern.instructure.com" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            The URL of your institution's Canvas instance
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={registerForm.control}
-                      name="canvasToken"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Canvas API Token</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Your Canvas API token. You can generate this in Canvas under Account {">"} Settings {">"} New Access Token
-                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
