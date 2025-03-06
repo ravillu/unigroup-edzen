@@ -1,5 +1,5 @@
-import { users, forms, students, groups } from "@shared/schema";
-import { type User, type InsertUser, type Form, type InsertForm, type Student, type InsertStudent, type Group, type InsertGroup } from "@shared/schema";
+import { users, forms, students, groups, institutions } from "@shared/schema";
+import { type User, type InsertUser, type Form, type InsertForm, type Student, type InsertStudent, type Group, type InsertGroup, type Institution, type InsertInstitution } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import session from "express-session";
@@ -22,6 +22,30 @@ export class DatabaseStorage {
     });
   }
 
+  // Institution methods
+  async getInstitution(id: number): Promise<Institution | undefined> {
+    const [institution] = await db.select().from(institutions).where(eq(institutions.id, id));
+    return institution;
+  }
+
+  async createInstitution(insertInstitution: InsertInstitution): Promise<Institution> {
+    const [institution] = await db.insert(institutions).values(insertInstitution).returning();
+    return institution;
+  }
+
+  async updateInstitution(id: number, data: Partial<InsertInstitution>): Promise<Institution> {
+    const [institution] = await db
+      .update(institutions)
+      .set(data)
+      .where(eq(institutions.id, id))
+      .returning();
+    return institution;
+  }
+
+  async getAllInstitutions(): Promise<Institution[]> {
+    return await db.select().from(institutions);
+  }
+
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -38,7 +62,7 @@ export class DatabaseStorage {
     return user;
   }
 
-  // Form methods
+  // Form methods with institution support
   async createForm(insertForm: InsertForm): Promise<Form> {
     const [form] = await db.insert(forms).values(insertForm).returning();
     return form;

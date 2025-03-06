@@ -1,19 +1,19 @@
 import axios from 'axios';
+import { Institution } from "@shared/schema";
 
 class CanvasService {
   private apiToken: string;
   private baseUrl: string;
 
-  constructor() {
-    const token = process.env.CANVAS_API_TOKEN;
-    const url = process.env.CANVAS_INSTANCE_URL;
-
-    if (!token || !url) {
-      throw new Error('Canvas API credentials not properly configured. Please set CANVAS_API_TOKEN and CANVAS_INSTANCE_URL');
+  constructor(institution: Institution, token?: string) {
+    if (!token) {
+      throw new Error('Canvas API token is required');
     }
 
     this.apiToken = token;
-    this.baseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+    this.baseUrl = institution.canvasInstanceUrl.endsWith('/') 
+      ? institution.canvasInstanceUrl.slice(0, -1) 
+      : institution.canvasInstanceUrl;
   }
 
   private async request(endpoint: string) {
@@ -65,4 +65,7 @@ class CanvasService {
   }
 }
 
-export const canvasService = new CanvasService();
+// Export a factory function instead of a singleton
+export const createCanvasService = (institution: Institution, token: string) => {
+  return new CanvasService(institution, token);
+};
