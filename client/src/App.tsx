@@ -9,6 +9,8 @@ import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard-page";
 import FormBuilderPage from "@/pages/form-builder-page";
 import GroupViewPage from "@/pages/group-view-page";
+import StudentFormPage from "@/pages/student-form-page"; // Import the new component
+
 
 function Router() {
   return (
@@ -16,6 +18,7 @@ function Router() {
       <ProtectedRoute path="/" component={DashboardPage} />
       <ProtectedRoute path="/forms/new" component={FormBuilderPage} />
       <ProtectedRoute path="/forms/:id" component={GroupViewPage} />
+      <Route path="/forms/:id/submit" component={StudentFormPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

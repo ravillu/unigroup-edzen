@@ -18,6 +18,21 @@ export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
   const formId = parseInt(id);
 
+  // Return early if formId is invalid
+  if (isNaN(formId)) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto">
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">Invalid form ID.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   const { data: form } = useQuery<Form>({
     queryKey: [`/api/forms/${formId}`],
   });
@@ -35,14 +50,14 @@ export default function GroupViewPage() {
       // Simple group generation algorithm that tries to balance skills
       const studentsPerGroup = Math.ceil(students.length / 4); // Aim for 4 groups
       const shuffled = [...students].sort(() => Math.random() - 0.5);
-      
+
       const newGroups = [];
       for (let i = 0; i < shuffled.length; i += studentsPerGroup) {
         const groupStudents = shuffled.slice(i, i + studentsPerGroup);
         const group = {
           formId,
           name: `Group ${newGroups.length + 1}`,
-          studentIds: groupStudents.map(s => s.id)
+          studentIds: groupStudents.map((s) => s.id),
         };
         const res = await apiRequest("POST", `/api/forms/${formId}/groups`, group);
         newGroups.push(await res.json());
