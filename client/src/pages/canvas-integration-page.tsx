@@ -17,7 +17,6 @@ interface CanvasStudent {
   email: string;
   sortable_name: string;
   short_name: string;
-  enrollment_state: string;
 }
 
 export default function CanvasIntegrationPage() {
@@ -97,16 +96,11 @@ export default function CanvasIntegrationPage() {
                     <CardTitle>{student.name}</CardTitle>
                     <CardDescription>{student.email}</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      Status: {student.enrollment_state}
-                    </p>
-                  </CardContent>
                 </Card>
               ))}
               {students.length === 0 && (
                 <div className="col-span-3 text-center py-8 text-muted-foreground">
-                  No active students found in this course.
+                  No students found in this course.
                 </div>
               )}
             </div>
