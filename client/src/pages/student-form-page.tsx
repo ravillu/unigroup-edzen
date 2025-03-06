@@ -35,11 +35,15 @@ import {
 const academicYears = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
 const genders = ["Male", "Female", "Non-binary", "Prefer not to say"];
 const nuinCampuses = [
-  "Dublin, Ireland",
-  "London, England",
-  "Melbourne, Australia",
-  "Prague, Czech Republic",
-  "Rome, Italy"
+  "N.U.in Czech Republic – University of New York in Prague",
+  "N.U.in Germany – CIEE Berlin",
+  "N.U.in Greece – American College of Thessaloniki",
+  "N.U.in Ireland – University College Dublin",
+  "N.U.in Italy – John Cabot University",
+  "N.U.in Northern Ireland – Queens University Belfast",
+  "N.U.in Portugal – CIEE Lisbon",
+  "N.U.in Scotland – University of Glasgow",
+  "N.U.in Spain – Saint Louis University Madrid"
 ];
 
 // Updated from screenshot
