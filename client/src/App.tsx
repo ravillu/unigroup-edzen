@@ -17,9 +17,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <ProtectedRoute path="/canvas" component={CanvasIntegrationPage} />
       <ProtectedRoute path="/" component={DashboardPage} requireCanvasSetup={true} />
       <ProtectedRoute path="/forms/new" component={FormBuilderPage} requireCanvasSetup={true} />
-      <ProtectedRoute path="/canvas" component={CanvasIntegrationPage} />
       <Route path="/forms/:id/responses" component={FormResponsesPage} />
       <Route path="/forms/:id/submit" component={StudentFormPage} />
       <Route path="/forms/:id/groups" component={GroupViewPage} />

@@ -23,6 +23,7 @@ export function ProtectedRoute({
     );
   }
 
+  // Redirect to auth if not logged in
   if (!user) {
     return (
       <Route path={path}>
