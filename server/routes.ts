@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertFormSchema, insertStudentSchema, insertGroupSchema } from "@shared/schema";
+import { canvasService } from "./services/canvas";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -119,6 +120,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const group = await storage.updateGroup(id, req.body);
     res.json(group);
   });
+
+  // Added Canvas routes
+  app.get("/api/canvas/courses", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const courses = await canvasService.getCourses();
+      res.json(courses);
+    } catch (error) {
+      console.error('Failed to fetch Canvas courses:', error);
+      res.status(500).json({ message: "Failed to fetch Canvas courses" });
+    }
+  });
+
+  app.get("/api/canvas/courses/:courseId/students", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const students = await canvasService.getCourseStudents(courseId);
+      res.json(students);
+    } catch (error) {
+      console.error('Failed to fetch Canvas students:', error);
+      res.status(500).json({ message: "Failed to fetch Canvas students" });
+    }
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;
