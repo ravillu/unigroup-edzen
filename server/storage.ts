@@ -124,10 +124,8 @@ export class DatabaseStorage {
       return b.skillScore - a.skillScore;
     });
 
-    // Calculate optimal number of groups to ensure minimum size
-    const minGroupSize = 3;
-    const numGroups = Math.floor(students.length / minGroupSize);
-    const targetGroupSize = Math.ceil(students.length / numGroups);
+    // Calculate number of groups based on user's specified group size
+    const numGroups = Math.ceil(students.length / groupSize);
 
     const groups: { studentIds: number[]; metrics: any }[] = Array(numGroups)
       .fill(null)
@@ -148,17 +146,14 @@ export class DatabaseStorage {
       let bestScore = -Infinity;
 
       for (let i = 0; i < groups.length; i++) {
-        // Skip groups that have reached target size unless all groups have
-        if (groups[i].studentIds.length >= targetGroupSize && 
-            groups.some(g => g.studentIds.length < targetGroupSize - 1)) {
-          continue;
-        }
+        // Only allow groups that haven't reached the specified size
+        if (groups[i].studentIds.length >= groupSize) continue;
 
         const group = groups[i];
         let score = 0;
 
-        // Group size balance score - prefer filling smaller groups first
-        score += (targetGroupSize - group.studentIds.length) * 2;
+        // Prefer smaller groups until they reach target size
+        score += (groupSize - group.studentIds.length) * 2;
 
         // Gender balance score
         const genderCount = { ...group.metrics.genderCount };
