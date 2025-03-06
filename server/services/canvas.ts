@@ -13,7 +13,7 @@ class CanvasService {
     }
 
     this.apiToken = token;
-    this.baseUrl = url.endsWith('/') ? url.slice(0, -1) : url; // Remove trailing slash if present
+    this.baseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
   }
 
   private async request(endpoint: string) {
@@ -37,8 +37,9 @@ class CanvasService {
 
   async getCourses() {
     try {
-      // Only fetch courses where user is teacher and include student count
-      return await this.request('courses?enrollment_type=teacher&include[]=total_students');
+      // Only fetch courses where user is teacher
+      const courses = await this.request('courses?enrollment_type=teacher&include[]=total_students&state[]=available');
+      return courses;
     } catch (error) {
       console.error('Failed to fetch courses:', error);
       throw new Error('Failed to fetch Canvas courses');
@@ -47,10 +48,11 @@ class CanvasService {
 
   async getCourseStudents(courseId: number) {
     try {
-      // Fetch active students with their enrollments
-      return await this.request(
-        `courses/${courseId}/users?enrollment_type[]=student&enrollment_state[]=active&include[]=enrollments`
+      // Fetch all students (not just active ones) to ensure we get everyone
+      const students = await this.request(
+        `courses/${courseId}/users?enrollment_type[]=student&per_page=100&include[]=email`
       );
+      return students;
     } catch (error) {
       console.error(`Failed to fetch students for course ${courseId}:`, error);
       throw new Error('Failed to fetch Canvas course students');
