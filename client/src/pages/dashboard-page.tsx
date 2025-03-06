@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Form } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ClipboardCopy, FileText, Trash2 } from "lucide-react";
+import { Plus, ClipboardCopy, FileText, Trash2, Database } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -35,7 +35,7 @@ export default function DashboardPage() {
       return formId;
     },
     onSuccess: (formId) => {
-      queryClient.setQueryData<Form[]>(["/api/forms"], (oldData) => 
+      queryClient.setQueryData<Form[]>(["/api/forms"], (oldData) =>
         oldData?.filter(form => form.id !== formId) || []
       );
       toast({
@@ -70,6 +70,12 @@ export default function DashboardPage() {
             NU Group Formation
           </h1>
           <div className="flex items-center gap-4">
+            <Link href="/canvas">
+              <Button variant="outline">
+                <Database className="mr-2 h-4 w-4" />
+                Canvas Integration
+              </Button>
+            </Link>
             <span>Welcome, {user?.username}</span>
             <Button variant="outline" onClick={() => logoutMutation.mutate()}>
               Logout
@@ -134,7 +140,7 @@ export default function DashboardPage() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
+                          <AlertDialogAction
                             onClick={() => deleteFormMutation.mutate(form.id)}
                             className="bg-destructive hover:bg-destructive/90"
                           >

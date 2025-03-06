@@ -11,12 +11,14 @@ import FormBuilderPage from "@/pages/form-builder-page";
 import FormResponsesPage from "@/pages/form-responses-page";
 import StudentFormPage from "@/pages/student-form-page";
 import GroupViewPage from "@/pages/group-view-page";
+import CanvasIntegrationPage from "@/pages/canvas-integration-page";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={DashboardPage} />
       <ProtectedRoute path="/forms/new" component={FormBuilderPage} />
+      <ProtectedRoute path="/canvas" component={CanvasIntegrationPage} />
       <Route path="/forms/:id/responses" component={FormResponsesPage} />
       <Route path="/forms/:id/submit" component={StudentFormPage} />
       <Route path="/forms/:id/groups" component={GroupViewPage} />
