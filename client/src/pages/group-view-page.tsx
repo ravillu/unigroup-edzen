@@ -86,16 +86,19 @@ export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
   const formId = parseInt(id);
 
-  const { data: form } = useQuery<Form>({
+  const { data: form, isLoading: formLoading } = useQuery<Form>({
     queryKey: [`/api/forms/${formId}`],
+    enabled: !isNaN(formId),
   });
 
-  const { data: students = [] } = useQuery<Student[]>({
+  const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
     queryKey: [`/api/forms/${formId}/students`],
+    enabled: !isNaN(formId),
   });
 
-  const { data: groups = [] } = useQuery<Group[]>({
+  const { data: groups = [], isLoading: groupsLoading } = useQuery<Group[]>({
     queryKey: [`/api/forms/${formId}/groups`],
+    enabled: !isNaN(formId),
   });
 
   const generateGroupsMutation = useMutation({
@@ -151,7 +154,33 @@ export default function GroupViewPage() {
     },
   });
 
-  const getStudentById = (id: number) => students.find((s) => s.id === id);
+  if (isNaN(formId)) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto">
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">Invalid form ID.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (formLoading || studentsLoading || groupsLoading) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto">
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">Loading...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (!form) {
     return (

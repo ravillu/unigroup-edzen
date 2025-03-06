@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Form as FormType } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -105,10 +105,13 @@ type Question = {
 export default function StudentFormPage() {
   const { id } = useParams<{ id: string }>();
   const formId = parseInt(id);
+  const [, setLocation] = useLocation();
   const [submitted, setSubmitted] = useState(false);
+  const queryClient = useQueryClient();
 
-  const { data: formData } = useQuery<FormType>({
+  const { data: formData, isLoading: formLoading } = useQuery<FormType>({
     queryKey: [`/api/forms/${formId}`],
+    enabled: !isNaN(formId),
   });
 
   const questions = (formData?.questions as Question[]) || [];
@@ -141,16 +144,35 @@ export default function StudentFormPage() {
     },
     onSuccess: () => {
       setSubmitted(true);
+      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/students`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
+      setTimeout(() => {
+        setLocation(`/forms/${formId}`);
+      }, 2000);
     },
   });
 
-  if (!formData) {
+  if (isNaN(formId)) {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">Form not found.</p>
+              <p className="text-muted-foreground">Invalid form ID.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (formLoading) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">Loading form...</p>
             </CardContent>
           </Card>
         </div>
