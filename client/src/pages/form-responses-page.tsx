@@ -28,13 +28,13 @@ export default function FormResponsesPage() {
   const [groupSize, setGroupSize] = useState(4);
   const [skillPriorities, setSkillPriorities] = useState<Record<string, number>>({});
 
-  console.log('Debug - Route params:', { id, formId, isValidId: !isNaN(formId as number) });
-
+  // Fetch form data
   const { data: form, isLoading: formLoading } = useQuery<Form>({
     queryKey: [`/api/forms/${formId}`],
     enabled: formId !== null && !isNaN(formId),
   });
 
+  // Fetch students with real-time updates
   const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
     queryKey: [`/api/forms/${formId}/students`],
     enabled: formId !== null && !isNaN(formId),
@@ -60,13 +60,22 @@ export default function FormResponsesPage() {
           payload
         );
 
-        const responseData = await response.json();
+        // Log the raw response for debugging
+        const responseText = await response.text();
+        console.log('Raw response:', responseText);
+
+        let responseData;
+        try {
+          responseData = JSON.parse(responseText);
+        } catch (e) {
+          console.error('Failed to parse response as JSON:', e);
+          throw new Error('Invalid response from server');
+        }
 
         if (!response.ok) {
           throw new Error(responseData.message || 'Failed to generate groups');
         }
 
-        console.log('Groups generated successfully:', responseData);
         return responseData;
       } catch (error) {
         console.error('Group generation error:', error);
@@ -74,7 +83,7 @@ export default function FormResponsesPage() {
       }
     },
     onSuccess: (data) => {
-      console.log('Groups generated:', data);
+      console.log('Groups generated successfully:', data);
       queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
       toast({
         title: "Success",
