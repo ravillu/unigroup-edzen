@@ -1,0 +1,31 @@
+Student Grouping Logic
+Step-by-Step Algorithm Flow
+Prioritize Students
+Identify Key Skills: List all students with skills rated 4 or 5 in key areas (e.g., Business Planning, Presentation) and queue them for initial placement.
+Sequential Placement: Prioritize students with higher skill levels to ensure strong competencies in each group. Place students rated 3 or below afterward to balance team abilities.
+Group Assignment
+For each student, attempt to assign them to a group based on the following constraints:
+Group Capacity: Ensure the group has not reached its maximum size.
+Gender Balance: Maintain an even distribution of males and females.
+NUIN Uniqueness: Ensure no two students with the same NUIN end up in the same group.
+Ethnic Diversity: Promote a mix of ethnicities by avoiding repetition that undermines diversity.
+Backtracking
+If a student cannot join any group without violating constraints, move to the next group for placement.
+If all groups conflict, reassign the student to the first group with a conflict, overriding constraints only as a last resort.
+Finalize Groups
+After assigning each student, review and adjust to ensure that all constraints are met as closely as possible.
+
+Why This Solution?
+Skill-Based Prioritization
+Strong Foundations: Students with top-rated skills are assigned first, ensuring that each group has key expertise.
+Balanced Teams: Lower-rated students are allocated afterward, reducing skill disparity within teams.
+Diversity & Inclusion Checks
+NUIN Diversity: No group contains duplicate NUINs, encouraging unique perspectives.
+Ethnic Representation: Groups include a mix of ethnicities to foster collaboration and cultural exchange.
+Gender Balance: Each group has a fair representation of males and females.
+Smart Backtracking
+Guaranteed Placement: Ensures all students are assigned by reevaluating placements when constraints are violated.
+Adaptive Flexibility: Reassignments are made strategically to maintain balance and meet constraints.
+Group Size Management
+Capacity Control: Groups adhere to size limits, preventing overcrowding.
+Uniform Distribution: Ensures consistent workloads across groups for fairness.

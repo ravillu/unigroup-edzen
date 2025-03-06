@@ -14,6 +14,68 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, UserPlus2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
+function calculateGroupFitness(group: Student[], newStudent: Student): number {
+  let fitness = 0;
+
+  // Gender balance
+  const genderCounts = group.reduce((acc: Record<string, number>, student) => {
+    acc[student.gender] = (acc[student.gender] || 0) + 1;
+    return acc;
+  }, {});
+  if (genderCounts[newStudent.gender] >= Math.ceil(group.length / 2)) {
+    fitness -= 2;
+  }
+
+  // Ethnic diversity
+  const ethnicityCounts = group.reduce((acc: Record<string, number>, student) => {
+    acc[student.ethnicity] = (acc[student.ethnicity] || 0) + 1;
+    return acc;
+  }, {});
+  if (ethnicityCounts[newStudent.ethnicity] >= Math.ceil(group.length / 3)) {
+    fitness -= 2;
+  }
+
+  // NUin uniqueness
+  if (group.some(student => student.nunStatus === newStudent.nunStatus && newStudent.nunStatus !== "N/A")) {
+    fitness -= 3;
+  }
+
+  // Skill complementarity
+  const existingSkills = group.reduce((acc: Record<string, number[]>, student) => {
+    Object.entries(student.skills as Record<string, number>).forEach(([skill, level]) => {
+      if (!acc[skill]) acc[skill] = [];
+      acc[skill].push(level);
+    });
+    return acc;
+  }, {});
+
+  Object.entries(newStudent.skills as Record<string, number>).forEach(([skill, level]) => {
+    const avgSkill = existingSkills[skill] 
+      ? existingSkills[skill].reduce((a, b) => a + b, 0) / existingSkills[skill].length 
+      : 0;
+    if (Math.abs(avgSkill - level) >= 2) {
+      fitness += 1; // Reward skill diversity
+    }
+  });
+
+  return fitness;
+}
+
+function findBestGroup(student: Student, groups: Student[][]): number {
+  let bestGroupIndex = 0;
+  let bestFitness = -Infinity;
+
+  groups.forEach((group, index) => {
+    const fitness = calculateGroupFitness(group, student);
+    if (fitness > bestFitness) {
+      bestFitness = fitness;
+      bestGroupIndex = index;
+    }
+  });
+
+  return bestGroupIndex;
+}
+
 export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
   const formId = parseInt(id);
@@ -47,22 +109,51 @@ export default function GroupViewPage() {
 
   const generateGroupsMutation = useMutation({
     mutationFn: async () => {
-      // Simple group generation algorithm that tries to balance skills
-      const studentsPerGroup = Math.ceil(students.length / 4); // Aim for 4 groups
-      const shuffled = [...students].sort(() => Math.random() - 0.5);
+      // Advanced group generation algorithm
+      const numGroups = Math.ceil(students.length / 4); // Aim for 4-5 students per group
+      const newGroups: Student[][] = Array.from({ length: numGroups }, () => []);
 
-      const newGroups = [];
-      for (let i = 0; i < shuffled.length; i += studentsPerGroup) {
-        const groupStudents = shuffled.slice(i, i + studentsPerGroup);
+      // Sort students by skill level (prioritize high skills)
+      const sortedStudents = [...students].sort((a, b) => {
+        const aSkills = Object.values(a.skills as Record<string, number>);
+        const bSkills = Object.values(b.skills as Record<string, number>);
+        const aHighSkills = aSkills.filter(skill => skill >= 4).length;
+        const bHighSkills = bSkills.filter(skill => skill >= 4).length;
+        return bHighSkills - aHighSkills;
+      });
+
+      // First pass: distribute students with high skills
+      const highSkilledStudents = sortedStudents.filter(student => 
+        Object.values(student.skills as Record<string, number>).some(skill => skill >= 4)
+      );
+
+      highSkilledStudents.forEach((student, index) => {
+        newGroups[index % numGroups].push(student);
+      });
+
+      // Second pass: distribute remaining students
+      const remainingStudents = sortedStudents.filter(student => 
+        !Object.values(student.skills as Record<string, number>).some(skill => skill >= 4)
+      );
+
+      remainingStudents.forEach(student => {
+        const bestGroupIndex = findBestGroup(student, newGroups);
+        newGroups[bestGroupIndex].push(student);
+      });
+
+      // Create groups in database
+      const createdGroups = [];
+      for (let i = 0; i < newGroups.length; i++) {
         const group = {
           formId,
-          name: `Group ${newGroups.length + 1}`,
-          studentIds: groupStudents.map((s) => s.id),
+          name: `Group ${i + 1}`,
+          studentIds: newGroups[i].map(s => s.id),
         };
         const res = await apiRequest("POST", `/api/forms/${formId}/groups`, group);
-        newGroups.push(await res.json());
+        createdGroups.push(await res.json());
       }
-      return newGroups;
+
+      return createdGroups;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });

@@ -33,6 +33,36 @@ import {
 
 const academicYears = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
 const genders = ["Male", "Female", "Non-binary", "Prefer not to say"];
+const nuinCampuses = [
+  "N/A",
+  "London",
+  "Dublin",
+  "Melbourne",
+  "Vancouver",
+  "San Francisco",
+  "Berlin",
+];
+const majors = [
+  "Business Administration",
+  "Computer Science",
+  "Data Science",
+  "Economics",
+  "Engineering",
+  "Finance",
+  "Information Systems",
+  "Marketing",
+  "Other"
+];
+const ethnicities = [
+  "American Indian or Alaska Native",
+  "Asian",
+  "Black or African American",
+  "Hispanic or Latino",
+  "Native Hawaiian or Other Pacific Islander",
+  "White",
+  "Two or More Races",
+  "Prefer not to say"
+];
 
 const studentFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -41,7 +71,7 @@ const studentFormSchema = z.object({
   academicYear: z.string().min(1, "Academic year is required"),
   ethnicity: z.string().min(1, "Ethnicity is required"),
   major: z.string().min(1, "Major is required"),
-  nunStatus: z.string().min(1, "NUN status is required"),
+  nunStatus: z.string().min(1, "NUin status is required"),
   skills: z.record(z.number().min(0).max(5)),
 });
 
@@ -229,9 +259,23 @@ export default function StudentFormPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Ethnicity</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select ethnicity" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ethnicities.map((ethnicity) => (
+                            <SelectItem key={ethnicity} value={ethnicity}>
+                              {ethnicity}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -243,9 +287,23 @@ export default function StudentFormPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Major</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select major" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {majors.map((major) => (
+                            <SelectItem key={major} value={major}>
+                              {major}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -256,10 +314,24 @@ export default function StudentFormPage() {
                   name="nunStatus"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>NUN Status</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <FormLabel>NUin Campus</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select NUin campus" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {nuinCampuses.map((campus) => (
+                            <SelectItem key={campus} value={campus}>
+                              {campus}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
