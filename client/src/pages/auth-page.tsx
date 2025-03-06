@@ -6,17 +6,39 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertUserSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link } from "wouter";
 
 const loginSchema = insertUserSchema.pick({
   username: true,
   password: true,
 });
 
+const registerSchema = insertUserSchema.extend({
+  email: z.string().email(),
+  canvasInstanceUrl: z.string().url(),
+  canvasToken: z.string(),
+}).pick({
+  username: true,
+  password: true,
+  email: true,
+  canvasInstanceUrl: true,
+  canvasToken: true,
+});
+
 type LoginData = z.infer<typeof loginSchema>;
+type RegisterData = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -26,8 +48,8 @@ export default function AuthPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const registerForm = useForm<LoginData>({
-    resolver: zodResolver(loginSchema),
+  const registerForm = useForm<RegisterData>({
+    resolver: zodResolver(registerSchema),
   });
 
   useEffect(() => {
@@ -51,67 +73,151 @@ export default function AuthPage() {
               </TabsList>
 
               <TabsContent value="login">
-                <form
-                  onSubmit={loginForm.handleSubmit((data) =>
-                    loginMutation.mutate(data)
-                  )}
-                  className="space-y-4"
-                >
-                  <div>
-                    <Label htmlFor="login-username">Username</Label>
-                    <Input
-                      id="login-username"
-                      {...loginForm.register("username")}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="login-password">Password</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      {...loginForm.register("password")}
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loginMutation.isPending}
+                <Form {...loginForm}>
+                  <form
+                    onSubmit={loginForm.handleSubmit((data) =>
+                      loginMutation.mutate(data)
+                    )}
+                    className="space-y-4"
                   >
-                    Login
-                  </Button>
-                </form>
+                    <FormField
+                      control={loginForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={loginMutation.isPending}
+                    >
+                      Login
+                    </Button>
+                  </form>
+                </Form>
               </TabsContent>
 
               <TabsContent value="register">
-                <form
-                  onSubmit={registerForm.handleSubmit((data) =>
-                    registerMutation.mutate(data)
-                  )}
-                  className="space-y-4"
-                >
-                  <div>
-                    <Label htmlFor="register-username">Username</Label>
-                    <Input
-                      id="register-username"
-                      {...registerForm.register("username")}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="register-password">Password</Label>
-                    <Input
-                      id="register-password"
-                      type="password"
-                      {...registerForm.register("password")}
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={registerMutation.isPending}
+                <Form {...registerForm}>
+                  <form
+                    onSubmit={registerForm.handleSubmit((data) =>
+                      registerMutation.mutate(data)
+                    )}
+                    className="space-y-4"
                   >
-                    Register
-                  </Button>
-                </form>
+                    <FormField
+                      control={registerForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
+                      name="canvasInstanceUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Canvas Instance URL</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="e.g. https://northeastern.instructure.com" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            The URL of your institution's Canvas instance
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={registerForm.control}
+                      name="canvasToken"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Canvas API Token</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="password" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Your Canvas API token. You can generate this in Canvas under Account {">"} Settings {">"} New Access Token
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={registerMutation.isPending}
+                    >
+                      Register
+                    </Button>
+                  </form>
+                </Form>
               </TabsContent>
             </Tabs>
           </CardContent>

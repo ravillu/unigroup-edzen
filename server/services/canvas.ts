@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { User } from "@shared/schema";
 
 interface AssignmentOptions {
   name: string;
@@ -11,12 +12,22 @@ class CanvasService {
   private apiToken: string;
   private baseUrl: string;
 
-  constructor() {
-    const token = process.env.CANVAS_API_TOKEN;
-    const url = process.env.CANVAS_INSTANCE_URL;
+  constructor(user?: User) {
+    let token: string | undefined;
+    let url: string | undefined;
+
+    if (user) {
+      // Use user-specific credentials if available
+      token = user.canvasToken;
+      url = user.canvasInstanceUrl;
+    } else {
+      // Fall back to environment variables
+      token = process.env.CANVAS_API_TOKEN;
+      url = process.env.CANVAS_INSTANCE_URL;
+    }
 
     if (!token || !url) {
-      throw new Error('Canvas API credentials not properly configured. Please set CANVAS_API_TOKEN and CANVAS_INSTANCE_URL');
+      throw new Error('Canvas API credentials not properly configured');
     }
 
     this.apiToken = token;
@@ -99,4 +110,7 @@ class CanvasService {
   }
 }
 
-export const canvasService = new CanvasService();
+// Create a factory function to get user-specific canvas service
+export const createCanvasService = (user?: User) => {
+  return new CanvasService(user);
+};

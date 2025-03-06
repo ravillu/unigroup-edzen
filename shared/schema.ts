@@ -13,32 +13,21 @@ export const institutions = pgTable("institutions", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Update users table to include institution
+// Users table with optional institution
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   institutionId: integer("institution_id").references(() => institutions.id),
   username: text("username").notNull(),
-  password: text("password"), // Optional for SSO
+  password: text("password").notNull(), 
   isProfessor: boolean("is_professor").notNull().default(true),
   canvasId: integer("canvas_id"),
   canvasToken: text("canvas_token"),
+  canvasInstanceUrl: text("canvas_instance_url"), // Added for individual professor setup
   email: text("email").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const forms = pgTable("forms", {
-  id: serial("id").primaryKey(),
-  institutionId: integer("institution_id").references(() => institutions.id),
-  professorId: integer("professor_id").notNull(),
-  courseId: integer("canvas_course_id"),
-  title: text("title").notNull(),
-  description: text("description"),
-  questions: jsonb("questions").notNull(),
-  createdAt: text("created_at").notNull()
-});
-
-// Rest of the schema remains the same
 export const students = pgTable("students", {
   id: serial("id").primaryKey(),
   formId: integer("form_id").notNull(),
@@ -59,12 +48,23 @@ export const groups = pgTable("groups", {
   studentIds: integer("student_ids").array().notNull()
 });
 
+export const forms = pgTable("forms", {
+  id: serial("id").primaryKey(),
+  institutionId: integer("institution_id").references(() => institutions.id),
+  professorId: integer("professor_id").notNull(),
+  courseId: integer("canvas_course_id"),
+  title: text("title").notNull(),
+  description: text("description"),
+  questions: jsonb("questions").notNull(),
+  createdAt: text("created_at").notNull()
+});
+
 // Create insert schemas
 export const insertInstitutionSchema = createInsertSchema(institutions);
 export const insertUserSchema = createInsertSchema(users).extend({
-  password: z.string().optional(),
-  canvasId: z.number().optional(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   canvasToken: z.string().optional(),
+  canvasInstanceUrl: z.string().optional(),
 });
 export const insertFormSchema = createInsertSchema(forms);
 export const insertStudentSchema = createInsertSchema(students);

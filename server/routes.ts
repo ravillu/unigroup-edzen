@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertFormSchema, insertStudentSchema, insertGroupSchema, insertInstitutionSchema } from "@shared/schema";
-import { canvasService } from "./services/canvas"; // Updated import
+import { canvasService, createCanvasService } from "./services/canvas"; // Updated import
 import { createCanvasAuthService } from "./services/canvas-auth";
 import { createLTIService } from "./services/lti";
 
@@ -146,11 +146,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Canvas API routes
+  // Canvas API routes (updated to use user-specific Canvas service)
   app.get("/api/canvas/courses", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
+      const canvasService = createCanvasService(req.user);
       const courses = await canvasService.getCourses();
       res.json(courses);
     } catch (error) {
@@ -164,6 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const courseId = parseInt(req.params.courseId);
+      const canvasService = createCanvasService(req.user);
       const students = await canvasService.getCourseStudents(courseId);
       res.json(students);
     } catch (error) {
@@ -184,7 +186,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
       const submissionUrl = `${baseUrl}/forms/${formId}/submit`;
 
-      // Create assignment in Canvas
+      // Create assignment in Canvas using user's credentials
+      const canvasService = createCanvasService(req.user);
       const assignment = await canvasService.createAssignment(courseId, {
         name,
         description: `${description ? description + "\n\n" : ""}Welcome to ${name}!\n\nPlease fill the personal profile survey using the link below before the start of your class.\n\n<a href="${submissionUrl}" target="_blank">Click here to access the group formation survey</a>`,
