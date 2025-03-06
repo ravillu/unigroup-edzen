@@ -202,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add this route handler in the appropriate section of routes.ts
+  // Update the user update route to properly handle session data
   app.patch("/api/user/canvas", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -226,15 +226,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Update session
-      req.session.canvasToken = canvasToken;
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Session destroy error:', err);
+          return res.status(500).json({ message: "Failed to update session" });
+        }
 
-      res.json(updatedUser);
+        req.login(updatedUser, (loginErr) => {
+          if (loginErr) {
+            console.error('Login error:', loginErr);
+            return res.status(500).json({ message: "Failed to update session" });
+          }
+          res.json(updatedUser);
+        });
+      });
     } catch (error) {
       console.error('Failed to update Canvas credentials:', error);
-      res.status(400).json({ 
-        message: error instanceof Error ? error.message : "Failed to update Canvas credentials" 
+      res.status(400).json({
+        message: error instanceof Error ? error.message : "Failed to update Canvas credentials"
       });
     }
+  });
+
+  // Update the logout route to properly clear session
+  app.post("/api/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ message: "Failed to logout" });
+      }
+      res.sendStatus(200);
+    });
   });
 
 

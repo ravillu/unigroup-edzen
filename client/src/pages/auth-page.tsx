@@ -48,12 +48,15 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (user) {
-      // If user has no Canvas token, redirect to Canvas integration
-      if (!user.canvasToken) {
-        setLocation("/canvas");
-      } else {
+      console.log("Auth state:", { user, hasCanvasToken: user.canvasToken });
+      // If user is already logged in, redirect appropriately
+      if (user.canvasToken) {
         setLocation("/");
+      } else {
+        setLocation("/canvas");
       }
+    } else {
+      console.log("No authenticated user");
     }
   }, [user, setLocation]);
 

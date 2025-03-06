@@ -75,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.setQueryData(["/api/user"], null);
       setLocation("/auth");
     },
