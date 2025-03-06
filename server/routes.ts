@@ -180,13 +180,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const courseId = parseInt(req.params.courseId);
       const { formId, name, description } = req.body;
 
+      // Get the submission URL
+      const submissionUrl = `${process.env.APP_URL}/forms/${formId}/submit`;
+
       // Create assignment in Canvas
       const assignment = await canvasService.createAssignment(courseId, {
         name,
-        description,
+        description: `Welcome to ${name}!\n\nPlease fill the personal profile survey using the link below before the start of your class.\n\nForm Link: ${submissionUrl}`,
         submission_types: ["external_tool"],
         external_tool_tag_attributes: {
-          url: `${process.env.APP_URL}/forms/${formId}/submit`,
+          url: submissionUrl,
           new_tab: true
         },
         published: true
