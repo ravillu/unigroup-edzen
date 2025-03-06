@@ -8,16 +8,15 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard-page";
 import FormBuilderPage from "@/pages/form-builder-page";
-import GroupViewPage from "@/pages/group-view-page";
-import StudentFormPage from "@/pages/student-form-page"; // Import the new component
-
+import FormResponsesPage from "@/pages/form-responses-page";
+import StudentFormPage from "@/pages/student-form-page";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={DashboardPage} />
       <ProtectedRoute path="/forms/new" component={FormBuilderPage} />
-      <ProtectedRoute path="/forms/:id" component={GroupViewPage} />
+      <ProtectedRoute path="/forms/:id/responses" component={FormResponsesPage} />
       <Route path="/forms/:id/submit" component={StudentFormPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />

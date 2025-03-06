@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Form } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ClipboardCopy, Users } from "lucide-react";
+import { Plus, ClipboardCopy, FileText } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,7 +16,6 @@ export default function DashboardPage() {
   });
 
   const copyToClipboard = (formId: number) => {
-    // Update URL to point to the student submission form
     const url = `${window.location.origin}/forms/${formId}/submit`;
     navigator.clipboard.writeText(url).then(() => {
       toast({
@@ -96,10 +95,10 @@ export default function DashboardPage() {
                       <ClipboardCopy className="mr-2 h-4 w-4" />
                       Copy Form URL
                     </Button>
-                    <Link href={`/forms/${form.id}`}>
+                    <Link href={`/forms/${form.id}/responses`}>
                       <Button size="sm">
-                        <Users className="mr-2 h-4 w-4" />
-                        View Groups
+                        <FileText className="mr-2 h-4 w-4" />
+                        View Responses
                       </Button>
                     </Link>
                   </div>
