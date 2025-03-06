@@ -7,6 +7,17 @@ import { Plus, ClipboardCopy, FileText, Trash2, Database, BookOpen, Users } from
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface CanvasCourse {
   id: number;
@@ -40,9 +51,16 @@ export default function DashboardPage() {
       );
       toast({
         title: "Success",
-        description: "Form has been deleted",
+        description: "Survey has been deleted",
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   });
 
   return (
@@ -152,7 +170,33 @@ export default function DashboardPage() {
                 {forms.map((form) => (
                   <Card key={form.id}>
                     <CardHeader>
-                      <CardTitle>{form.title}</CardTitle>
+                      <div className="flex justify-between items-start">
+                        <CardTitle>{form.title}</CardTitle>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Survey</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this survey? This will permanently remove all responses and groups associated with it.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteFormMutation.mutate(form.id)}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground mb-4">
