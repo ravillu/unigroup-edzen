@@ -4,7 +4,7 @@ import { Form, Student, Group } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, GripVertical, UserCog } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
@@ -120,8 +122,34 @@ export default function GroupViewPage() {
     updateGroupMutation.mutateAsync({ groupId: destGroup.id, studentIds: newDestStudentIds });
   };
 
+  // Calculate group statistics
+  const calculateGroupStats = (groupStudents: Student[]) => {
+    if (!groupStudents.length) return null;
+
+    const stats = {
+      avgSkills: {} as Record<string, number>,
+      genderBalance: {} as Record<string, number>,
+      ethnicityCount: {} as Record<string, number>,
+    };
+
+    // Calculate average skills
+    groupStudents.forEach(student => {
+      Object.entries(student.skills).forEach(([skill, value]) => {
+        stats.avgSkills[skill] = (stats.avgSkills[skill] || 0) + (value as number);
+      });
+      stats.genderBalance[student.gender] = (stats.genderBalance[student.gender] || 0) + 1;
+      stats.ethnicityCount[student.ethnicity] = (stats.ethnicityCount[student.ethnicity] || 0) + 1;
+    });
+
+    Object.keys(stats.avgSkills).forEach(skill => {
+      stats.avgSkills[skill] = +(stats.avgSkills[skill] / groupStudents.length).toFixed(1);
+    });
+
+    return stats;
+  };
+
   // Show loading state while initial data is being fetched
-  if (formLoading) {
+  if (formLoading || studentsLoading || groupsLoading) {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-7xl mx-auto">
@@ -166,38 +194,49 @@ export default function GroupViewPage() {
           </div>
         </div>
 
-        {/* Group Configuration Section */}
+        {/* Group Configuration */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Group Configuration</CardTitle>
-            <CardDescription>
-              Advanced AI-driven group formation algorithm that:
-              1. Prioritizes students with key skills (rated 4-5)
-              2. Ensures balanced distribution across groups:
-                 • Gender balance
-                 • Ethnic diversity
-                 • Academic year mix
-                 • NUin status distribution
-              3. Optimizes skill complementarity within groups
-              4. Uses backtracking for constraint satisfaction
+            <CardDescription className="space-y-2">
+              <p>Advanced AI-driven group formation algorithm that:</p>
+              <ol className="list-decimal list-inside space-y-1 ml-2">
+                <li>Prioritizes students with key skills (rated 4-5)</li>
+                <li>Ensures balanced distribution across groups:
+                  <ul className="list-disc list-inside ml-4 mt-1 text-sm">
+                    <li>Gender balance</li>
+                    <li>Ethnic diversity</li>
+                    <li>Academic year mix</li>
+                    <li>NUin status distribution</li>
+                  </ul>
+                </li>
+                <li>Optimizes skill complementarity within groups</li>
+                <li>Uses intelligent constraint satisfaction</li>
+              </ol>
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               <div>
                 <Label>Group Size</Label>
-                <Input 
-                  type="number" 
-                  value={groupSize}
-                  onChange={(e) => setGroupSize(parseInt(e.target.value))}
-                  min={3}
-                  max={8}
-                  className="max-w-xs"
-                />
+                <div className="flex items-center gap-2 mt-1.5">
+                  <Input 
+                    type="number" 
+                    value={groupSize}
+                    onChange={(e) => setGroupSize(parseInt(e.target.value))}
+                    min={3}
+                    max={8}
+                    className="max-w-[100px]"
+                  />
+                  <span className="text-sm text-muted-foreground">students per group</span>
+                </div>
               </div>
 
               <div className="space-y-4">
-                <Label>Skill Priorities</Label>
+                <Label className="text-lg">Skill Priorities</Label>
+                <p className="text-sm text-muted-foreground -mt-2">
+                  Set the importance of each skill (1 = least important, 5 = most important)
+                </p>
                 {form?.questions.map((question: any) => (
                   <div key={question.id} className="grid gap-2">
                     <Label>{question.text}</Label>
@@ -225,10 +264,18 @@ export default function GroupViewPage() {
               <Button
                 onClick={() => generateGroupsMutation.mutate()}
                 disabled={generateGroupsMutation.isPending}
+                className="w-full sm:w-auto"
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${generateGroupsMutation.isPending ? 'animate-spin' : ''}`} />
-                {generateGroupsMutation.isPending ? 'Generating...' : 'Generate Groups'}
+                {generateGroupsMutation.isPending ? 'Generating Groups...' : 'Generate Groups'}
               </Button>
+
+              {groups.length > 0 && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  <UserCog className="inline-block mr-2 h-4 w-4" />
+                  Tip: Drag and drop students between groups to make manual adjustments
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -241,28 +288,59 @@ export default function GroupViewPage() {
                 const groupStudents = students.filter(student =>
                   group.studentIds.includes(student.id)
                 );
+                const stats = calculateGroupStats(groupStudents);
 
                 return (
                   <Card key={group.id}>
                     <CardHeader>
-                      <CardTitle>{group.name}</CardTitle>
-                      <CardDescription>
-                        {groupStudents.length} members
-                      </CardDescription>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>{group.name}</span>
+                        <Badge variant="outline">
+                          {groupStudents.length} members
+                        </Badge>
+                      </CardTitle>
+                      {stats && (
+                        <CardDescription className="mt-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                            <div>
+                              <p className="font-medium mb-1">Average Skills</p>
+                              {Object.entries(stats.avgSkills).map(([skill, avg]) => (
+                                <div key={skill} className="flex justify-between text-sm">
+                                  <span>{skill}:</span>
+                                  <span className="font-mono">{avg}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div>
+                              <p className="font-medium mb-1">Demographics</p>
+                              {Object.entries(stats.genderBalance).map(([gender, count]) => (
+                                <div key={gender} className="text-sm">
+                                  {gender}: {count}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </CardDescription>
+                      )}
                     </CardHeader>
                     <CardContent>
                       <Droppable droppableId={String(group.id)}>
-                        {(provided) => (
+                        {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
+                            className={cn(
+                              "rounded-md",
+                              snapshot.isDraggingOver && "bg-muted/50"
+                            )}
                           >
                             <Table>
                               <TableHeader>
                                 <TableRow>
+                                  <TableHead className="w-4"></TableHead>
                                   <TableHead>Name</TableHead>
                                   <TableHead>Demographics</TableHead>
-                                  {form.questions.map((q: any) => (
+                                  {form?.questions.map((q: any) => (
                                     <TableHead key={q.id}>{q.text}</TableHead>
                                   ))}
                                 </TableRow>
@@ -274,12 +352,22 @@ export default function GroupViewPage() {
                                     draggableId={String(student.id)}
                                     index={index}
                                   >
-                                    {(provided) => (
+                                    {(provided, snapshot) => (
                                       <TableRow
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
+                                        className={cn(
+                                          snapshot.isDragging && "bg-muted border-2 border-primary"
+                                        )}
                                       >
+                                        <TableCell>
+                                          <div
+                                            {...provided.dragHandleProps}
+                                            className="cursor-move hover:text-primary"
+                                          >
+                                            <GripVertical className="h-4 w-4" />
+                                          </div>
+                                        </TableCell>
                                         <TableCell className="font-medium">
                                           {student.name}
                                           <div className="text-sm text-muted-foreground">
@@ -289,12 +377,17 @@ export default function GroupViewPage() {
                                         <TableCell>
                                           {student.gender} • {student.ethnicity}
                                           <div className="text-sm text-muted-foreground">
-                                            {student.nunStatus === 'Yes' ? 'NUin' : 'Non-NUin'}
+                                            {student.nunStatus}
                                           </div>
                                         </TableCell>
-                                        {form.questions.map((q: any) => (
+                                        {form?.questions.map((q: any) => (
                                           <TableCell key={q.id} className="font-mono">
-                                            {(student.skills as any)[q.text]}
+                                            <Badge 
+                                              variant={(student.skills as any)[q.text] >= 4 ? "default" : "secondary"}
+                                              className="w-8 h-8 rounded-full"
+                                            >
+                                              {(student.skills as any)[q.text]}
+                                            </Badge>
                                           </TableCell>
                                         ))}
                                       </TableRow>

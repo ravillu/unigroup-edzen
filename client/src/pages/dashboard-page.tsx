@@ -3,10 +3,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Form } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ClipboardCopy, FileText, Database } from "lucide-react";
+import { Plus, ClipboardCopy, FileText, Database, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function DashboardPage() {
   const { user, logoutMutation } = useAuth();
@@ -33,6 +44,27 @@ export default function DashboardPage() {
       toast({
         title: "Error",
         description: "Failed to create test form",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteFormMutation = useMutation({
+    mutationFn: async (formId: number) => {
+      const res = await apiRequest("DELETE", `/api/forms/${formId}`);
+      if (!res.ok) throw new Error("Failed to delete form");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/forms"] });
+      toast({
+        title: "Success",
+        description: "Form has been deleted",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete form",
         variant: "destructive",
       });
     },
@@ -111,25 +143,52 @@ export default function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {forms.map((form) => (
-              <Card key={form.id}>
+              <Card key={form.id} className="flex flex-col">
                 <CardHeader>
-                  <CardTitle>{form.title}</CardTitle>
+                  <CardTitle className="flex justify-between items-start">
+                    <span className="truncate mr-4">{form.title}</span>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Form</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{form.title}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => deleteFormMutation.mutate(form.id)}
+                            className="bg-destructive hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
+                <CardContent className="flex-1">
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                     {form.description || "No description"}
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => copyToClipboard(form.id)}
+                      className="w-full sm:w-auto"
                     >
                       <ClipboardCopy className="mr-2 h-4 w-4" />
                       Copy Form URL
                     </Button>
-                    <Link href={`/forms/${form.id}/responses`}>
-                      <Button size="sm">
+                    <Link href={`/forms/${form.id}/responses`} className="w-full sm:w-auto">
+                      <Button size="sm" className="w-full">
                         <FileText className="mr-2 h-4 w-4" />
                         View Responses
                       </Button>
