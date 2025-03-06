@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronRight, Sparkles, Users, Brain, Gauge } from "lucide-react";
-import { VideoModal } from "@/components/ui/video-modal"
 
 export default function LandingPage() {
   const [, setLocation] = useLocation();
@@ -92,27 +91,14 @@ export default function LandingPage() {
               <p className="text-xl text-muted-foreground mb-8">
                 Transform your classroom dynamics with AI-powered group formation and seamless Canvas integration. Experience the future of collaborative learning.
               </p>
-              <div className="flex gap-4">
-                <Button
-                  size="lg"
-                  onClick={() => setLocation("/auth")}
-                  className="bg-[#662D91] hover:bg-[#662D91]/90 text-white"
-                >
-                  Get Started Free
-                  <ChevronRight className="ml-2 h-5 w-4" />
-                </Button>
-                <VideoModal
-                  trigger={
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="border-[#662D91] text-[#662D91] hover:bg-[#662D91]/10"
-                    >
-                      Watch Demo
-                    </Button>
-                  }
-                />
-              </div>
+              <Button
+                size="lg"
+                onClick={() => setLocation("/auth")}
+                className="bg-[#662D91] hover:bg-[#662D91]/90 text-white"
+              >
+                Get Started Free
+                <ChevronRight className="ml-2 h-5 w-4" />
+              </Button>
             </motion.div>
 
             {/* Feature Preview Card */}
