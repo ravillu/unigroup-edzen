@@ -8,7 +8,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -16,13 +16,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { GripVertical, Plus, Save, X } from "lucide-react";
+import { GripVertical, Plus, Save, X, HelpCircle } from "lucide-react";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
+  groupSize: z.number().min(3, "Group size must be at least 3").max(8, "Group size cannot exceed 8"),
   questions: z.array(
     z.object({
       id: z.string(),
@@ -82,6 +84,7 @@ export default function FormBuilderPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       questions: defaultQuestions,
+      groupSize: 4,
     },
   });
 
@@ -167,12 +170,43 @@ export default function FormBuilderPage() {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="groupSize"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Target Group Size</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min={3} 
+                          max={8} 
+                          {...field} 
+                          onChange={e => field.onChange(parseInt(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Choose the ideal size for each group. Students will be distributed evenly across groups.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-4">Questions</h2>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  Questions
+                  <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                </CardTitle>
+                <CardDescription>
+                  Drag and drop questions to set their priority. Questions at the top will be given more weight in the group formation algorithm. For example, put the most important skills first to ensure groups have a good balance of those skills.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <DragDropContext onDragEnd={onDragEnd}>
                   <Droppable droppableId="questions">
                     {(provided) => (
