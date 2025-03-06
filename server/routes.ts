@@ -36,7 +36,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const formId = parseInt(req.params.formId);
     const form = await storage.getForm(formId);
     if (!form) return res.sendStatus(404);
-    
+
     const data = insertStudentSchema.parse({
       ...req.body,
       formId
@@ -55,7 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/forms/:formId/groups", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const formId = parseInt(req.params.formId);
-    
+
     const data = insertGroupSchema.parse({
       ...req.body,
       formId
@@ -68,6 +68,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const formId = parseInt(req.params.formId);
     const groups = await storage.getGroupsByForm(formId);
     res.json(groups);
+  });
+
+  // Group Generation
+  app.post("/api/forms/:formId/groups/generate", async (req, res) => {
+    try {
+      const formId = parseInt(req.params.formId);
+      const { groupSize, skillPriorities } = req.body;
+
+      if (!groupSize || typeof groupSize !== 'number' || groupSize < 2 || groupSize > 8) {
+        return res.status(400).json({ message: "Invalid group size. Must be between 2 and 8." });
+      }
+
+      // Get students and form data
+      const students = await storage.getStudentsByForm(formId);
+      const form = await storage.getForm(formId);
+
+      if (!form) {
+        return res.status(404).json({ message: "Form not found" });
+      }
+
+      if (students.length === 0) {
+        return res.status(400).json({ message: "No students available for grouping" });
+      }
+
+      // Generate groups
+      const groups = await storage.generateGroups(formId, students, groupSize, skillPriorities);
+      res.json(groups);
+    } catch (error) {
+      console.error('Group generation error:', error);
+      res.status(500).json({ message: "Failed to generate groups" });
+    }
   });
 
   app.patch("/api/groups/:id", async (req, res) => {

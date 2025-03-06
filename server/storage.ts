@@ -81,6 +81,70 @@ export class DatabaseStorage {
       .returning();
     return group;
   }
+
+  // Delete existing groups for a form
+  private async deleteExistingGroups(formId: number): Promise<void> {
+    await db.delete(groups).where(eq(groups.formId, formId));
+  }
+
+  // Group generation method
+  async generateGroups(
+    formId: number,
+    students: Student[],
+    groupSize: number,
+    skillPriorities: Record<string, number>
+  ): Promise<Group[]> {
+    // Delete existing groups first
+    await this.deleteExistingGroups(formId);
+
+    // Calculate student scores based on skill priorities
+    const studentScores = students.map(student => {
+      let totalScore = 0;
+      for (const [skill, priority] of Object.entries(skillPriorities)) {
+        totalScore += ((student.skills as any)[skill] || 0) * priority;
+      }
+      return { student, score: totalScore };
+    });
+
+    // Sort students by score
+    studentScores.sort((a, b) => b.score - a.score);
+
+    // Calculate number of groups
+    const numGroups = Math.ceil(students.length / groupSize);
+    const groups: { studentIds: number[] }[] = Array(numGroups)
+      .fill(null)
+      .map(() => ({ studentIds: [] }));
+
+    // Distribute students using snake pattern
+    let groupIndex = 0;
+    let direction = 1;
+
+    studentScores.forEach(({ student }) => {
+      groups[groupIndex].studentIds.push(student.id);
+
+      groupIndex += direction;
+      if (groupIndex >= numGroups) {
+        groupIndex = numGroups - 1;
+        direction = -1;
+      } else if (groupIndex < 0) {
+        groupIndex = 0;
+        direction = 1;
+      }
+    });
+
+    // Create groups in database
+    const createdGroups: Group[] = [];
+    for (let i = 0; i < groups.length; i++) {
+      const group = await this.createGroup({
+        formId,
+        name: `Group ${i + 1}`,
+        studentIds: groups[i].studentIds
+      });
+      createdGroups.push(group);
+    }
+
+    return createdGroups;
+  }
 }
 
 export const storage = new DatabaseStorage();
