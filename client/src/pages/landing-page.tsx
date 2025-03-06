@@ -15,40 +15,49 @@ export default function LandingPage() {
           <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]">
             {/* Neural Network Animation */}
             <div className="absolute inset-0">
-              <svg className="w-full h-full opacity-30" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#662D91', stopOpacity: 0.6 }} />
-                    <stop offset="50%" style={{ stopColor: '#F7941D', stopOpacity: 0.4 }} />
-                    <stop offset="100%" style={{ stopColor: '#8DC63F', stopOpacity: 0.6 }} />
-                  </linearGradient>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grad1)" />
-              </svg>
+              {/* Floating Nodes */}
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute h-4 w-4 rounded-full bg-gradient-to-r from-[#662D91] to-[#F7941D] opacity-40 shadow-lg"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                  }}
+                  animate={{
+                    x: [0, Math.random() * 100 - 50, 0],
+                    y: [0, Math.random() * 100 - 50, 0],
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{
+                    duration: 10 + Math.random() * 5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
 
-              {/* Animated Network Lines */}
-              <div className="absolute inset-0 overflow-hidden">
-                {[...Array(20)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute h-px bg-gradient-to-r from-[#662D91]/20 via-[#F7941D]/20 to-[#8DC63F]/20"
-                    style={{
-                      width: '200%',
-                      left: '-50%',
-                      top: `${(i * 100) / 20}%`,
-                      transform: 'rotate(35deg)',
-                    }}
-                    animate={{
-                      translateX: ['-20%', '20%', '-20%'],
-                    }}
-                    transition={{
-                      duration: 8 + i * 0.5,
-                      repeat: Infinity,
-                      ease: 'linear',
-                    }}
-                  />
-                ))}
-              </div>
+              {/* Connecting Lines */}
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={`line-${i}`}
+                  className="absolute h-px bg-gradient-to-r from-[#662D91]/20 via-[#F7941D]/20 to-[#8DC63F]/20"
+                  style={{
+                    width: '200%',
+                    left: '-50%',
+                    top: `${(i * 100) / 20}%`,
+                    transform: 'rotate(35deg)',
+                  }}
+                  animate={{
+                    translateX: ['-20%', '20%', '-20%'],
+                  }}
+                  transition={{
+                    duration: 8 + i * 0.5,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -58,7 +67,7 @@ export default function LandingPage() {
           {/* Logo Header */}
           <div className="flex justify-center mb-16">
             <motion.img
-              src="attached_assets/Edzen_AI.jpg"
+              src="/images/logo.jpg"
               alt="EdZen AI Logo"
               className="h-24 object-contain"
               initial={{ opacity: 0, y: -20 }}
@@ -195,7 +204,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <img
-              src="attached_assets/Edzen_AI.jpg"
+              src="/images/logo.jpg"
               alt="EdZen AI Logo"
               className="h-12 mx-auto mb-4"
             />
