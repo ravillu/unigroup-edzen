@@ -16,43 +16,32 @@ function renderSkillLevel(level: number): string {
 
 export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
-  const formId = parseInt(id || '');
+  const formId = id ? parseInt(id) : null;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   // Fetch form data
   const { data: form, isLoading: formLoading } = useQuery<Form>({
     queryKey: [`/api/forms/${formId}`],
-    enabled: !isNaN(formId),
-    retry: 2,
-    staleTime: 5000,
-    onError: (error) => {
-      console.error('Failed to fetch form:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load form data. Please try again.",
-        variant: "destructive",
-      });
-    }
+    enabled: formId !== null,
+    retry: 3,
+    staleTime: 0, // Always fetch fresh data
   });
 
   // Fetch students with proper error handling
   const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
     queryKey: [`/api/forms/${formId}/students`],
-    enabled: !isNaN(formId) && !!form,
-    retry: 2,
-    staleTime: 5000,
-    onError: (error) => {
-      console.error('Failed to fetch students:', error);
-    }
+    enabled: formId !== null && !!form,
+    retry: 3,
+    staleTime: 0,
   });
 
   // Fetch groups with proper error handling
   const { data: groups = [], isLoading: groupsLoading } = useQuery<Group[]>({
     queryKey: [`/api/forms/${formId}/groups`],
-    enabled: !isNaN(formId) && !!form,
-    retry: 2,
-    staleTime: 5000
+    enabled: formId !== null && !!form,
+    retry: 3,
+    staleTime: 0,
   });
 
   const generateGroupsMutation = useMutation({
@@ -81,15 +70,15 @@ export default function GroupViewPage() {
     }
   });
 
-  // Show loading state
-  if (formLoading || studentsLoading || groupsLoading) {
+  // Show loading state while initial data is being fetched
+  if (formLoading) {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="py-8 text-center">
               <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading data...</p>
+              <p className="text-muted-foreground">Loading form data...</p>
             </CardContent>
           </Card>
         </div>
@@ -97,8 +86,8 @@ export default function GroupViewPage() {
     );
   }
 
-  // Handle invalid form ID
-  if (!form || !formId || isNaN(formId)) {
+  // Handle missing or invalid form
+  if (!formId || !form) {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-7xl mx-auto">
@@ -136,7 +125,14 @@ export default function GroupViewPage() {
         </div>
 
         {/* Show appropriate content based on data state */}
-        {students.length === 0 ? (
+        {studentsLoading ? (
+          <Card>
+            <CardContent className="py-8 text-center">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading student data...</p>
+            </CardContent>
+          </Card>
+        ) : students.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center">
               <UserPlus2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -179,7 +175,7 @@ export default function GroupViewPage() {
             </Card>
 
             {/* Groups section */}
-            {groups.length > 0 && (
+            {!groupsLoading && groups.length > 0 && (
               <div className="mt-8">
                 <h2 className="text-2xl font-bold mb-4">Generated Groups</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
