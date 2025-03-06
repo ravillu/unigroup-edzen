@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Form as FormType } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 const academicYears = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
 const genders = ["Male", "Female", "Non-binary", "Prefer not to say"];
@@ -46,7 +47,6 @@ const nuinCampuses = [
   "N.U.in Spain – Saint Louis University Madrid"
 ];
 
-// Updated from screenshot
 const majors = [
   "MKTG - Marketing",
   "FIN - Finance",
@@ -107,7 +107,7 @@ export default function StudentFormPage() {
   const formId = parseInt(id);
   const [, setLocation] = useLocation();
   const [submitted, setSubmitted] = useState(false);
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: formData, isLoading: formLoading } = useQuery<FormType>({
     queryKey: [`/api/forms/${formId}`],
@@ -131,21 +131,42 @@ export default function StudentFormPage() {
 
   const submitFormMutation = useMutation({
     mutationFn: async (values: StudentFormValues) => {
-      const { isNuin, nuinCampus, ...rest } = values;
-      const res = await apiRequest(
-        "POST",
-        `/api/forms/${formId}/students`,
-        {
-          ...rest,
-          nunStatus: isNuin === "yes" ? nuinCampus : "N/A"
+      try {
+        const { isNuin, nuinCampus, ...rest } = values;
+        const response = await apiRequest(
+          "POST",
+          `/api/forms/${formId}/students`,
+          {
+            ...rest,
+            nunStatus: isNuin === "yes" && nuinCampus ? nuinCampus : "N/A",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to submit form');
         }
-      );
-      return res.json();
+
+        return response.json();
+      } catch (error) {
+        console.error('Form submission error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       setSubmitted(true);
-      // Don't redirect to group view, just show thank you message
+      toast({
+        title: "Success",
+        description: "Your response has been recorded. Thank you!",
+      });
     },
+    onError: (error) => {
+      console.error('Form submission error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit form. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   if (isNaN(formId)) {
