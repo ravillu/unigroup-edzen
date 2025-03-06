@@ -53,6 +53,18 @@ export class DatabaseStorage {
     return form;
   }
 
+  // Delete form and all associated data
+  async deleteForm(formId: number): Promise<void> {
+    // Delete associated groups first
+    await db.delete(groups).where(eq(groups.formId, formId));
+
+    // Delete associated students
+    await db.delete(students).where(eq(students.formId, formId));
+
+    // Finally delete the form
+    await db.delete(forms).where(eq(forms.id, formId));
+  }
+
   // Student methods
   async createStudent(insertStudent: InsertStudent): Promise<Student> {
     const [student] = await db.insert(students).values(insertStudent).returning();
