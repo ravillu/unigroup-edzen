@@ -6,6 +6,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, UserPlus2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 
 // Skill level rendering helper
 function renderSkillLevel(level: number): string {
@@ -19,6 +23,8 @@ export default function GroupViewPage() {
   const formId = id ? parseInt(id) : null;
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [groupSize, setGroupSize] = useState(4);
+  const [skillPriorities, setSkillPriorities] = useState<Record<string, number>>({});
 
   // Fetch form data
   const { data: form, isLoading: formLoading } = useQuery<Form>({
@@ -46,11 +52,26 @@ export default function GroupViewPage() {
 
   const generateGroupsMutation = useMutation({
     mutationFn: async () => {
+      const payload = {
+        groupSize,
+        skillPriorities: Object.fromEntries(
+          form?.questions.map((q: any) => [q.text, skillPriorities[q.text] || 1]) || []
+        )
+      };
+      console.log('Generating groups with payload:', payload);
+
       const res = await apiRequest(
         "POST",
         `/api/forms/${formId}/groups/generate`,
-        { formId }
+        payload
       );
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Group generation failed:', errorText);
+        throw new Error('Failed to generate groups');
+      }
+
       return res.json();
     },
     onSuccess: () => {
@@ -114,108 +135,139 @@ export default function GroupViewPage() {
               <p className="text-muted-foreground mt-2">{form.description}</p>
             )}
           </div>
-          <Button
-            variant="outline"
-            onClick={() => generateGroupsMutation.mutate()}
-            disabled={generateGroupsMutation.isPending || students.length === 0}
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${generateGroupsMutation.isPending ? 'animate-spin' : ''}`} />
-            {generateGroupsMutation.isPending ? 'Generating...' : 'Generate Groups'}
-          </Button>
         </div>
 
-        {/* Show appropriate content based on data state */}
-        {studentsLoading ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading student data...</p>
-            </CardContent>
-          </Card>
-        ) : students.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <UserPlus2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                No students have submitted responses yet.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            {/* Student responses section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Student Responses</CardTitle>
-                <CardDescription>
-                  {students.length} students have submitted their responses
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {students.map((student) => (
-                    <div key={student.id} className="p-4 border rounded-lg">
-                      <div className="font-medium">{student.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {student.major} • {student.academicYear}
-                      </div>
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        {Object.entries(student.skills as Record<string, number>).map(
-                          ([skill, level]) => (
-                            <div key={skill} className="text-sm">
-                              {skill}: {renderSkillLevel(level)}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Groups section */}
-            {!groupsLoading && groups.length > 0 && (
-              <div className="mt-8">
-                <h2 className="text-2xl font-bold mb-4">Generated Groups</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {groups.map((group) => {
-                    const groupStudents = students.filter(student =>
-                      group.studentIds.includes(student.id)
-                    );
-
-                    return (
-                      <Card key={group.id}>
-                        <CardHeader>
-                          <CardTitle>{group.name}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-2">
-                            {groupStudents.map(student => (
-                              <div key={student.id} className="p-2 rounded-md bg-muted/50">
-                                <div className="font-medium">{student.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {student.major} • {student.academicYear}
-                                </div>
-                                <div className="mt-1 text-sm">
-                                  {Object.entries(student.skills as Record<string, number>).map(
-                                    ([skill, level]) => (
-                                      <div key={skill}>
-                                        {skill}: {renderSkillLevel(level)}
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
+        {/* Group Configuration Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Group Configuration</CardTitle>
+            <CardDescription>
+              Configure group size and skill priorities before generating groups
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <Label>Group Size</Label>
+                <Input 
+                  type="number" 
+                  value={groupSize}
+                  onChange={(e) => setGroupSize(parseInt(e.target.value))}
+                  min={2}
+                  max={6}
+                  className="max-w-xs"
+                />
               </div>
-            )}
+
+              <div className="space-y-4">
+                <Label>Skill Priorities</Label>
+                {form.questions.map((question: any) => (
+                  <div key={question.id} className="grid gap-2">
+                    <Label>{question.text}</Label>
+                    <div className="flex items-center gap-4">
+                      <Slider
+                        defaultValue={[skillPriorities[question.text] || 1]}
+                        max={5}
+                        min={1}
+                        step={1}
+                        onValueChange={([value]) => 
+                          setSkillPriorities(prev => ({
+                            ...prev,
+                            [question.text]: value
+                          }))
+                        }
+                        className="flex-1"
+                      />
+                      <span className="w-8 text-center">
+                        {skillPriorities[question.text] || 1}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                onClick={() => generateGroupsMutation.mutate()}
+                disabled={generateGroupsMutation.isPending}
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${generateGroupsMutation.isPending ? 'animate-spin' : ''}`} />
+                {generateGroupsMutation.isPending ? 'Generating...' : 'Generate Groups'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Student List */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Student Responses</CardTitle>
+            <CardDescription>
+              {students.length} students have submitted their responses
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {students.map((student) => (
+                <div key={student.id} className="p-4 border rounded-lg">
+                  <div className="font-medium">{student.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {student.major} • {student.academicYear}
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {Object.entries(student.skills as Record<string, number>).map(
+                      ([skill, level]) => (
+                        <div key={skill} className="text-sm">
+                          {skill}: {renderSkillLevel(level)}
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Generated Groups */}
+        {groups.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">Generated Groups</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {groups.map((group) => {
+                const groupStudents = students.filter(student =>
+                  group.studentIds.includes(student.id)
+                );
+
+                return (
+                  <Card key={group.id}>
+                    <CardHeader>
+                      <CardTitle>{group.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {groupStudents.map(student => (
+                          <div key={student.id} className="p-2 rounded-md bg-muted/50">
+                            <div className="font-medium">{student.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {student.major} • {student.academicYear}
+                            </div>
+                            <div className="mt-1 text-sm">
+                              {Object.entries(student.skills as Record<string, number>).map(
+                                ([skill, level]) => (
+                                  <div key={skill}>
+                                    {skill}: {renderSkillLevel(level)}
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
