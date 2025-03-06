@@ -5,41 +5,58 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RefreshCw } from "lucide-react";
 
-// Debugging helper
+// Debugging helper (retained from original)
 function logData(label: string, data: any) {
   console.log(`[DEBUG] ${label}:`, JSON.stringify(data, null, 2));
+}
+
+function renderSkillLevel(level: number): string {
+  const stars = "★".repeat(level);
+  const emptyStars = "☆".repeat(5 - level);
+  return stars + emptyStars;
 }
 
 export default function FormResponsesPage() {
   const { id } = useParams<{ id: string }>();
   const formId = id ? parseInt(id) : null;
 
-  // Fetch form data with debugging
+  console.log("Current form ID:", formId); // Debug log
+
+  // Fetch form data
   const { data: form, isLoading: formLoading } = useQuery<Form>({
     queryKey: [`/api/forms/${formId}`],
-    enabled: formId !== null,
-    onSuccess: (data) => logData("Form Data", data),
-    onError: (error) => console.error("Form fetch error:", error)
+    enabled: formId !== null && !isNaN(formId),
+    retry: 3,
   });
 
-  // Fetch students with debugging
+  // Fetch students with real-time updates
   const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
     queryKey: [`/api/forms/${formId}/students`],
-    enabled: formId !== null && !!form,
-    refetchInterval: 5000, // Real-time updates every 5 seconds
-    onSuccess: (data) => logData("Student Responses", data),
-    onError: (error) => console.error("Students fetch error:", error)
+    enabled: formId !== null && !isNaN(formId),
+    refetchInterval: 5000, // Refresh every 5 seconds
   });
 
-  // Loading state
+  // Debug logs
+  console.log("Form data:", form);
+  console.log("Student responses:", students);
+
+  // Loading state with debug info
   if (formLoading) {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-7xl mx-auto">
           <Card>
-            <CardContent className="py-8 text-center">
-              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading form data...</p>
+            <CardContent className="py-8">
+              <div className="text-center">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading form data...</p>
+              </div>
+              <pre className="mt-4 text-xs bg-muted p-4 rounded">
+                Debug Info:
+                formId: {formId}
+                type: {typeof formId}
+                isNaN: {isNaN(formId as number)}
+              </pre>
             </CardContent>
           </Card>
         </div>
@@ -47,18 +64,22 @@ export default function FormResponsesPage() {
     );
   }
 
-  // Form not found state
+  // Form not found state with debug info
   if (!form) {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-7xl mx-auto">
           <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">Form not found. Please check the URL and try again.</p>
-              <pre className="mt-4 text-left text-sm bg-muted p-4 rounded">
+            <CardContent className="py-8">
+              <p className="text-center text-muted-foreground">
+                Form not found. Please check the URL and try again.
+              </p>
+              <pre className="mt-4 text-xs bg-muted p-4 rounded">
                 Debug Info:
                 formId: {formId}
+                type: {typeof formId}
                 isNaN: {isNaN(formId as number)}
+                raw id param: {id}
               </pre>
             </CardContent>
           </Card>
@@ -78,18 +99,6 @@ export default function FormResponsesPage() {
           )}
         </div>
 
-        {/* Debug info */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Debug Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-sm bg-muted p-4 rounded">
-              {JSON.stringify({ form, students }, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
-
         {/* Responses table */}
         <Card>
           <CardHeader>
@@ -105,30 +114,44 @@ export default function FormResponsesPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>NUID</TableHead>
                     <TableHead>Major</TableHead>
                     <TableHead>Year</TableHead>
-                    <TableHead>Skills</TableHead>
+                    <TableHead>NUin Status</TableHead>
+                    {form.questions.map((question: any) => (
+                      <TableHead key={question.id}>{question.text}</TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {students.map((student) => (
                     <TableRow key={student.id}>
                       <TableCell>{student.name}</TableCell>
+                      <TableCell>{student.nuid}</TableCell>
                       <TableCell>{student.major}</TableCell>
                       <TableCell>{student.academicYear}</TableCell>
-                      <TableCell>
-                        <pre className="text-xs">
-                          {JSON.stringify(student.skills, null, 2)}
-                        </pre>
-                      </TableCell>
+                      <TableCell>{student.nunStatus}</TableCell>
+                      {form.questions.map((question: any) => (
+                        <TableCell key={question.id}>
+                          {renderSkillLevel((student.skills as any)[question.text])}
+                        </TableCell>
+                      ))}
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             ) : (
-              <p className="text-center py-8 text-muted-foreground">
-                No responses yet. Waiting for students to submit the form...
-              </p>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  No responses yet. Waiting for students to submit the form...
+                </p>
+                <pre className="mt-4 text-xs bg-muted p-4 rounded">
+                  Debug Info:
+                  formId: {formId}
+                  studentsLoading: {studentsLoading.toString()}
+                  form: {JSON.stringify(form, null, 2)}
+                </pre>
+              </div>
             )}
           </CardContent>
         </Card>
