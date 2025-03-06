@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create assignment in Canvas
       const assignment = await canvasService.createAssignment(courseId, {
         name,
-        description: `${description ? description + "\n\n" : ""}Welcome to ${name}!\n\nPlease fill the personal profile survey using the link below before the start of your class.\n\nForm Link: ${submissionUrl}`,
+        description: `${description ? description + "\n\n" : ""}Welcome to ${name}!\n\nPlease fill the personal profile survey using the link below before the start of your class.\n\n<a href="${submissionUrl}" target="_blank">Click here to access the group formation survey</a>`,
         submission_types: ["none"],
         published: true
       });

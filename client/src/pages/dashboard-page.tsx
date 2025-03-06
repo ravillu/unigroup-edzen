@@ -120,7 +120,7 @@ export default function DashboardPage() {
           {/* Active Forms Section */}
           <section>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Active Group Formations</h2>
+              <h2 className="text-2xl font-bold">Published Group Formation Assignments</h2>
             </div>
 
             {isLoadingForms ? (
@@ -141,7 +141,7 @@ export default function DashboardPage() {
               <Card>
                 <CardContent className="py-8 text-center">
                   <p className="text-muted-foreground">
-                    You haven't created any group formations yet. Select a course above to get started.
+                    No group formation assignments published yet. Select a course above to create your first assignment.
                   </p>
                 </CardContent>
               </Card>
@@ -165,7 +165,7 @@ export default function DashboardPage() {
                             navigator.clipboard.writeText(url);
                             toast({
                               title: "URL Copied",
-                              description: "Student submission form URL has been copied to clipboard",
+                              description: "Form URL has been copied to clipboard",
                             });
                           }}
                           className="w-full sm:w-auto"
