@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -160,9 +160,19 @@ export default function FormBuilderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Create Group Formation Assignment</h1>
+    <div className="min-h-screen bg-background">
+      <header className="border-b fixed top-0 left-0 right-0 bg-background z-50">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <Link href="/">
+            <h1 className="text-2xl font-bold text-[#C41230] cursor-pointer">
+              NU Group Formation
+            </h1>
+          </Link>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto p-8 mt-16">
+        <h1 className="text-3xl font-bold mb-8">Create Survey</h1>
 
         <Form {...form}>
           <form
@@ -209,11 +219,11 @@ export default function FormBuilderPage() {
                     <FormItem>
                       <FormLabel>Target Group Size</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          min={3} 
-                          max={8} 
-                          {...field} 
+                        <Input
+                          type="number"
+                          min={3}
+                          max={8}
+                          {...field}
                           onChange={e => field.onChange(parseInt(e.target.value))}
                         />
                       </FormControl>
@@ -313,8 +323,8 @@ export default function FormBuilderPage() {
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={createFormMutation.isPending}
                 className="gap-2"
               >

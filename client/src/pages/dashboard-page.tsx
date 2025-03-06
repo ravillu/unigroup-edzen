@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Form } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, ClipboardCopy, FileText, Trash2, Database, BookOpen } from "lucide-react";
+import { Plus, ClipboardCopy, FileText, Trash2, Database, BookOpen, Users } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -47,11 +47,13 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
+      <header className="border-b fixed top-0 left-0 right-0 bg-background z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[#C41230]">
-            NU Group Formation
-          </h1>
+          <Link href="/">
+            <h1 className="text-2xl font-bold text-[#C41230] cursor-pointer">
+              NU Group Formation
+            </h1>
+          </Link>
           <div className="flex items-center gap-4">
             <span>Welcome, {user?.username}</span>
             <Button variant="outline" onClick={() => logoutMutation.mutate()}>
@@ -61,7 +63,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 mt-16">
         <div className="space-y-8">
           {/* Courses Section */}
           <section>
@@ -107,7 +109,7 @@ export default function DashboardPage() {
                       <Link href={`/forms/new?courseId=${course.id}&courseName=${encodeURIComponent(course.name)}`}>
                         <Button className="w-full">
                           <Plus className="mr-2 h-4 w-4" />
-                          Publish Group Formation Assignment
+                          Publish Survey
                         </Button>
                       </Link>
                     </CardContent>
@@ -117,10 +119,10 @@ export default function DashboardPage() {
             )}
           </section>
 
-          {/* Active Forms Section */}
+          {/* Responses Section */}
           <section>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Published Group Formation Assignments</h2>
+              <h2 className="text-2xl font-bold">View Responses</h2>
             </div>
 
             {isLoadingForms ? (
@@ -141,7 +143,7 @@ export default function DashboardPage() {
               <Card>
                 <CardContent className="py-8 text-center">
                   <p className="text-muted-foreground">
-                    No group formation assignments published yet. Select a course above to create your first assignment.
+                    No surveys published yet. Select a course above to create your first survey.
                   </p>
                 </CardContent>
               </Card>
@@ -177,6 +179,12 @@ export default function DashboardPage() {
                           <Button size="sm" className="w-full">
                             <FileText className="mr-2 h-4 w-4" />
                             View Responses
+                          </Button>
+                        </Link>
+                        <Link href={`/forms/${form.id}/groups`} className="w-full sm:w-auto">
+                          <Button size="sm" className="w-full">
+                            <Users className="mr-2 h-4 w-4" />
+                            View Groups
                           </Button>
                         </Link>
                       </div>
