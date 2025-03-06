@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Form as FormType } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -107,6 +107,7 @@ export default function StudentFormPage() {
   const formId = id ? parseInt(id) : null;
   const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   console.log('Form ID:', formId); // Debug log
 
@@ -170,6 +171,10 @@ export default function StudentFormPage() {
     },
     onSuccess: () => {
       setSubmitted(true);
+      // Invalidate the students query so the responses page updates
+      queryClient.invalidateQueries({ 
+        queryKey: [`/api/forms/${formId}/students`] 
+      });
       toast({
         title: "Success",
         description: "Your response has been recorded. Thank you!",

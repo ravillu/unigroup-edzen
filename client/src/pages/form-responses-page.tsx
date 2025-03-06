@@ -27,30 +27,29 @@ export default function FormResponsesPage() {
   const [showGroupConfig, setShowGroupConfig] = useState(false);
   const [groupSize, setGroupSize] = useState(4);
   const [skillPriorities, setSkillPriorities] = useState<Record<string, number>>({});
-  const [groupsGenerated, setGroupsGenerated] = useState(false); // Track if groups are generated
+  const [groupsGenerated, setGroupsGenerated] = useState(false);
 
-  // Fetch form data
+  // Fetch form data with auto-refresh
   const { data: form, isLoading: formLoading } = useQuery<Form>({
     queryKey: [`/api/forms/${formId}`],
     enabled: formId !== null,
-    retry: 3,
-    staleTime: 0,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    staleTime: 0, // Consider data stale immediately
   });
 
-  // Fetch students
+  // Fetch students with auto-refresh
   const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
     queryKey: [`/api/forms/${formId}/students`],
     enabled: formId !== null && !!form,
-    retry: 3,
+    refetchInterval: 5000, // Refetch every 5 seconds
     staleTime: 0,
   });
 
-  // Fetch existing groups
+  // Fetch groups only when generated
   const { data: groups = [], isLoading: groupsLoading } = useQuery<Group[]>({
     queryKey: [`/api/forms/${formId}/groups`],
-    enabled: formId !== null && !!form && groupsGenerated, //Only fetch if groups are generated
-    retry: 3,
-    staleTime: 0,
+    enabled: formId !== null && groupsGenerated,
+    refetchInterval: groupsGenerated ? 5000 : false,
   });
 
   const generateGroupsMutation = useMutation({
@@ -73,16 +72,8 @@ export default function FormResponsesPage() {
         description: "Groups have been generated successfully.",
       });
       setShowGroupConfig(false);
-      setGroupsGenerated(true); //Update state after successful generation
+      setGroupsGenerated(true);
     },
-    onError: (error) => {
-      console.error('Failed to generate groups:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate groups. Please try again.",
-        variant: "destructive",
-      });
-    }
   });
 
   if (formLoading) {
@@ -127,7 +118,7 @@ export default function FormResponsesPage() {
               <p className="text-muted-foreground mt-2">{form.description}</p>
             )}
           </div>
-          {students.length > 0 && ( //Always show button
+          {students.length > 0 && !showGroupConfig && !groupsGenerated && (
             <Button
               onClick={() => setShowGroupConfig(true)}
               className="flex items-center"
@@ -202,67 +193,50 @@ export default function FormResponsesPage() {
         )}
 
         {/* Student Responses Table */}
-        {studentsLoading ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading responses...</p>
-            </CardContent>
-          </Card>
-        ) : students.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <UserPlus2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                No students have submitted responses yet.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Student Responses</CardTitle>
-              <CardDescription>
-                {students.length} students have submitted their responses
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Major</TableHead>
-                      <TableHead>Year</TableHead>
-                      <TableHead>NUin Status</TableHead>
+        <Card>
+          <CardHeader>
+            <CardTitle>Student Responses</CardTitle>
+            <CardDescription>
+              {students.length} students have submitted their responses
+              {studentsLoading && " (Refreshing...)"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Major</TableHead>
+                    <TableHead>Year</TableHead>
+                    <TableHead>NUin Status</TableHead>
+                    {form.questions.map((question: any) => (
+                      <TableHead key={question.id}>{question.text}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {students.map((student) => (
+                    <TableRow key={student.id}>
+                      <TableCell>{student.name}</TableCell>
+                      <TableCell>{student.major}</TableCell>
+                      <TableCell>{student.academicYear}</TableCell>
+                      <TableCell>{student.nunStatus}</TableCell>
                       {form.questions.map((question: any) => (
-                        <TableHead key={question.id}>{question.text}</TableHead>
+                        <TableCell key={question.id}>
+                          {renderSkillLevel((student.skills as any)[question.text])}
+                        </TableCell>
                       ))}
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students.map((student) => (
-                      <TableRow key={student.id}>
-                        <TableCell>{student.name}</TableCell>
-                        <TableCell>{student.major}</TableCell>
-                        <TableCell>{student.academicYear}</TableCell>
-                        <TableCell>{student.nunStatus}</TableCell>
-                        {form.questions.map((question: any) => (
-                          <TableCell key={question.id}>
-                            {renderSkillLevel((student.skills as any)[question.text])}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Generated Groups Section */}
-        {groupsGenerated && !groupsLoading && groups.length > 0 && ( // Show only after generation
+        {groupsGenerated && !groupsLoading && groups.length > 0 && (
           <div className="mt-8">
             <Card>
               <CardHeader>
