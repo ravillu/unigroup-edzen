@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertUserSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Form,
@@ -62,7 +62,7 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Northeastern Group Formation</CardTitle>
+            <CardTitle>UniGroup by EdZen AI</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
@@ -185,7 +185,7 @@ export default function AuthPage() {
       <div className="hidden lg:block flex-1 bg-[#C41230] p-12">
         <div className="h-full flex flex-col justify-center text-white">
           <h1 className="text-4xl font-bold mb-6">
-            Student Group Formation Dashboard
+            UniGroup by EdZen AI
           </h1>
           <p className="text-lg">
             Create balanced and diverse student groups automatically using our
