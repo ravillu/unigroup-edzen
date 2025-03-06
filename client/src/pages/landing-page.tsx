@@ -67,7 +67,7 @@ export default function LandingPage() {
           {/* Logo Header */}
           <div className="flex justify-center mb-16">
             <motion.img
-              src="/Edzen_AI.jpg"
+              src="../../../attached_assets/Edzen_AI.jpg"
               alt="EdZen AI Logo"
               className="h-24 object-contain"
               initial={{ opacity: 0, y: -20 }}
@@ -195,7 +195,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <img
-              src="/Edzen_AI.jpg"
+              src="../../../attached_assets/Edzen_AI.jpg"
               alt="EdZen AI Logo"
               className="h-12 mx-auto mb-4"
             />
