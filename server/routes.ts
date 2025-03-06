@@ -108,7 +108,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(group);
   });
 
-  // Add this after the other POST routes
+  app.delete("/api/forms/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const formId = parseInt(req.params.id);
+      await storage.deleteForm(formId);
+      res.sendStatus(200);
+    } catch (error) {
+      console.error('Failed to delete form:', error);
+      res.status(500).json({ message: "Failed to delete form" });
+    }
+  });
+
   app.post("/api/forms/seed-test", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.sendStatus(401);

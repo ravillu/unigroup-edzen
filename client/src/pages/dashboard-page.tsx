@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Form } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, ClipboardCopy, FileText, Database, Trash2 } from "lucide-react";
+import { Plus, ClipboardCopy, FileText, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -28,27 +28,6 @@ export default function DashboardPage() {
     queryKey: ["/api/forms"],
   });
 
-  const seedTestDataMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/forms/seed-test");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/forms"] });
-      toast({
-        title: "Success",
-        description: "Test form has been created with sample data",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create test form",
-        variant: "destructive",
-      });
-    },
-  });
-
   const deleteFormMutation = useMutation({
     mutationFn: async (formId: number) => {
       const res = await apiRequest("DELETE", `/api/forms/${formId}`);
@@ -56,11 +35,9 @@ export default function DashboardPage() {
       return formId;
     },
     onSuccess: (formId) => {
-      // Optimistically update the UI by removing the deleted form
       queryClient.setQueryData<Form[]>(["/api/forms"], (oldData) => 
         oldData?.filter(form => form.id !== formId) || []
       );
-      queryClient.invalidateQueries({ queryKey: ["/api/forms"] });
       toast({
         title: "Success",
         description: "Form has been deleted",
@@ -104,22 +81,12 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold">Your Forms</h2>
-          <div className="flex gap-4">
-            <Button
-              variant="outline"
-              onClick={() => seedTestDataMutation.mutate()}
-              disabled={seedTestDataMutation.isPending}
-            >
-              <Database className="mr-2 h-4 w-4" />
-              Create Test Form
+          <Link href="/forms/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create New Form
             </Button>
-            <Link href="/forms/new">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create New Form
-              </Button>
-            </Link>
-          </div>
+          </Link>
         </div>
 
         {isLoading ? (
