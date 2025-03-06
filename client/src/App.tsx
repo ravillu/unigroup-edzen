@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
+import LandingPage from "@/pages/landing-page";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard-page";
@@ -16,7 +17,8 @@ import CanvasIntegrationPage from "@/pages/canvas-integration-page";
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={DashboardPage} requireCanvasSetup={true} />
+      <Route path="/" component={LandingPage} />
+      <ProtectedRoute path="/dashboard" component={DashboardPage} requireCanvasSetup={true} />
       <ProtectedRoute path="/forms/new" component={FormBuilderPage} requireCanvasSetup={true} />
       <ProtectedRoute path="/canvas" component={CanvasIntegrationPage} />
       <Route path="/forms/:id/responses" component={FormResponsesPage} />
