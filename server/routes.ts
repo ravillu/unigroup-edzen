@@ -207,7 +207,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const { canvasInstanceUrl, canvasToken } = req.body;
+      const { canvasInstanceUrl, canvasToken, canvasSetupSkipped } = req.body;
+
+      // If skipping Canvas setup
+      if (canvasSetupSkipped) {
+        const updatedUser = await storage.updateUser(req.user.id, {
+          canvasSetupSkipped: true,
+          updatedAt: new Date()
+        });
+        return res.json(updatedUser);
+      }
 
       // Test the Canvas credentials before saving
       const testService = createCanvasService({
@@ -222,23 +231,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user with new Canvas credentials
       const updatedUser = await storage.updateUser(req.user.id, {
         canvasInstanceUrl,
-        canvasToken
+        canvasToken,
+        updatedAt: new Date()
       });
 
-      // Update session
-      req.session.destroy((err) => {
+      // Update the user in the session
+      req.login(updatedUser, (err) => {
         if (err) {
-          console.error('Session destroy error:', err);
+          console.error('Login error:', err);
           return res.status(500).json({ message: "Failed to update session" });
         }
-
-        req.login(updatedUser, (loginErr) => {
-          if (loginErr) {
-            console.error('Login error:', loginErr);
-            return res.status(500).json({ message: "Failed to update session" });
-          }
-          res.json(updatedUser);
-        });
+        res.json(updatedUser);
       });
     } catch (error) {
       console.error('Failed to update Canvas credentials:', error);

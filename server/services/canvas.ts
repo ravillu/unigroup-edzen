@@ -31,6 +31,13 @@ class CanvasService {
 
     // Clean up the base URL
     this.baseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
+
+    // Log configuration for debugging
+    console.log('Canvas Service Configuration:', {
+      hasToken: !!this.apiToken,
+      baseUrl: this.baseUrl,
+      userProvided: !!(user?.canvasToken && user?.canvasInstanceUrl)
+    });
   }
 
   private async request(endpoint: string) {

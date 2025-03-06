@@ -34,6 +34,33 @@ const canvasConfigSchema = z.object({
 
 type CanvasConfigForm = z.infer<typeof canvasConfigSchema>;
 
+async function skipCanvasSetup() {
+    try {
+      // Update user's canvas setup skipped status
+      await apiRequest("PATCH", "/api/user/canvas", {
+        canvasSetupSkipped: true
+      });
+
+      toast({
+        title: "Canvas Integration Skipped",
+        description: "You can set this up later from your dashboard settings.",
+      });
+
+      // Force refresh the user data
+      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+
+      // Redirect to dashboard
+      setLocation("/");
+    } catch (error) {
+      console.error('Failed to skip Canvas setup:', error);
+      toast({
+        title: "Error",
+        description: "Failed to skip Canvas setup. Please try again.",
+        variant: "destructive"
+      });
+    }
+  }
+
 export default function CanvasIntegrationPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -45,13 +72,6 @@ export default function CanvasIntegrationPage() {
     resolver: zodResolver(canvasConfigSchema),
   });
 
-  const skipCanvasSetup = async () => {
-    toast({
-      title: "Canvas Integration Skipped",
-      description: "You can set this up later from your dashboard settings.",
-    });
-    setLocation("/");
-  };
 
   const updateCanvasCredentialsMutation = useMutation({
     mutationFn: async (values: CanvasConfigForm) => {
