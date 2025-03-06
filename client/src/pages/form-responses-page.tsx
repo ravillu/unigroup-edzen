@@ -1,9 +1,16 @@
+import { useState } from "react";
 import { useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Form, Student } from "@shared/schema";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { RefreshCw, Users } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 function renderSkillLevel(level: number): string {
   const stars = "★".repeat(level);
@@ -12,30 +19,62 @@ function renderSkillLevel(level: number): string {
 }
 
 export default function FormResponsesPage() {
-  // Get the ID from the route parameters
   const { id } = useParams();
   const formId = id ? parseInt(id) : null;
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  console.log('Debug - Route params:', { id, formId, isValidId: !isNaN(formId as number) }); // Debug log
+  const [showGroupConfig, setShowGroupConfig] = useState(false);
+  const [groupSize, setGroupSize] = useState(4);
+  const [skillPriorities, setSkillPriorities] = useState<Record<string, number>>({});
 
-  // Fetch form data with proper error handling
+  console.log('Debug - Route params:', { id, formId, isValidId: !isNaN(formId as number) });
+
   const { data: form, isLoading: formLoading } = useQuery<Form>({
     queryKey: [`/api/forms/${formId}`],
     enabled: formId !== null && !isNaN(formId),
   });
 
-  // Fetch students with real-time updates
   const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
     queryKey: [`/api/forms/${formId}/students`],
     enabled: formId !== null && !isNaN(formId),
-    refetchInterval: 5000, // Real-time updates every 5 seconds
+    refetchInterval: 5000,
   });
 
-  // Debug logs
-  console.log('Debug - Form data:', form);
-  console.log('Debug - Student responses:', students);
+  // Group generation mutation
+  const generateGroupsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(
+        "POST",
+        `/api/forms/${formId}/groups/generate`,
+        {
+          groupSize,
+          skillPriorities
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Failed to generate groups');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
+      toast({
+        title: "Success",
+        description: "Groups have been generated successfully.",
+      });
+      setShowGroupConfig(false);
+    },
+    onError: (error) => {
+      console.error('Failed to generate groups:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate groups. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
-  // Invalid ID handling
   if (!id || !formId || isNaN(formId)) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -56,7 +95,6 @@ export default function FormResponsesPage() {
     );
   }
 
-  // Loading state
   if (formLoading) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -72,7 +110,6 @@ export default function FormResponsesPage() {
     );
   }
 
-  // Form not found
   if (!form) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -90,13 +127,88 @@ export default function FormResponsesPage() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">{form.title}</h1>
-          {form.description && (
-            <p className="text-muted-foreground mt-2">{form.description}</p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">{form.title}</h1>
+            {form.description && (
+              <p className="text-muted-foreground mt-2">{form.description}</p>
+            )}
+          </div>
+          {students.length > 0 && !showGroupConfig && (
+            <Button
+              onClick={() => setShowGroupConfig(true)}
+              className="flex items-center"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Configure Groups
+            </Button>
           )}
         </div>
 
+        {/* Group Configuration Section */}
+        {showGroupConfig && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Group Configuration</CardTitle>
+              <CardDescription>
+                Configure group size and skill priorities before generating groups
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div>
+                  <Label>Group Size</Label>
+                  <Input 
+                    type="number" 
+                    value={groupSize}
+                    onChange={(e) => setGroupSize(parseInt(e.target.value))}
+                    min={2}
+                    max={6}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <Label>Skill Priorities</Label>
+                  {form.questions.map((question: any) => (
+                    <div key={question.id} className="grid gap-2">
+                      <Label>{question.text}</Label>
+                      <Slider
+                        defaultValue={[skillPriorities[question.text] || 1]}
+                        max={5}
+                        min={1}
+                        step={1}
+                        onValueChange={([value]) => 
+                          setSkillPriorities(prev => ({
+                            ...prev,
+                            [question.text]: value
+                          }))
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-4">
+                  <Button
+                    onClick={() => generateGroupsMutation.mutate()}
+                    disabled={generateGroupsMutation.isPending}
+                  >
+                    <RefreshCw className={`mr-2 h-4 w-4 ${generateGroupsMutation.isPending ? 'animate-spin' : ''}`} />
+                    {generateGroupsMutation.isPending ? 'Generating...' : 'Generate Groups'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowGroupConfig(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Student Responses Table */}
         <Card>
           <CardHeader>
             <CardTitle>Student Responses</CardTitle>
