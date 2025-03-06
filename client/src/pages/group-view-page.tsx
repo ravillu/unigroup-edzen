@@ -20,32 +20,6 @@ function renderSkillLevel(level: number): string {
   return stars + emptyStars;
 }
 
-function calculateGroupFitness(group: Student[], candidate: Student): number {
-  // Simple fitness calculation based on skill diversity
-  if (group.length === 0) return 1;
-  
-  // Calculate average skills for the current group
-  const groupSkills: Record<string, number> = {};
-  for (const student of group) {
-    const skills = student.skills as Record<string, number>;
-    for (const [skill, level] of Object.entries(skills)) {
-      if (!groupSkills[skill]) groupSkills[skill] = 0;
-      groupSkills[skill] += level;
-    }
-  }
-  
-  // Calculate fitness based on how the candidate's skills complement the group
-  let fitness = 0;
-  const candidateSkills = candidate.skills as Record<string, number>;
-  for (const [skill, level] of Object.entries(candidateSkills)) {
-    const avgGroupSkill = (groupSkills[skill] || 0) / group.length;
-    // Higher fitness if this skill balances the group
-    fitness += Math.abs(avgGroupSkill - level);
-  }
-  
-  return fitness;
-}
-
 function calculateGroupFitness(group: Student[], newStudent: Student): number {
   let fitness = 0;
 
@@ -112,21 +86,6 @@ export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
   const formId = parseInt(id);
 
-  // Return early if formId is invalid
-  if (isNaN(formId)) {
-    return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-7xl mx-auto">
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">Invalid form ID.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   const { data: form } = useQuery<Form>({
     queryKey: [`/api/forms/${formId}`],
   });
@@ -144,34 +103,6 @@ export default function GroupViewPage() {
       // Advanced group generation algorithm
       const numGroups = Math.ceil(students.length / 4); // Aim for 4-5 students per group
       const newGroups: Student[][] = Array.from({ length: numGroups }, () => []);
-      
-      // Create a copy of students array to work with
-      const unassignedStudents = [...students];
-      
-      // First pass: distribute students evenly
-      for (let i = 0; i < unassignedStudents.length; i++) {
-        const groupIndex = i % numGroups;
-        newGroups[groupIndex].push(unassignedStudents[i]);
-      }
-      
-      // Convert student groups to the format expected by the API
-      const groupsToCreate = newGroups.map((group, index) => ({
-        formId,
-        name: `Group ${index + 1}`,
-        studentIds: group.map(student => student.id)
-      }));
-      
-      // Create the groups via API
-      for (const group of groupsToCreate) {
-        await apiRequest("POST", `/api/forms/${formId}/groups`, group);
-      }
-      
-      return await apiRequest("GET", `/api/forms/${formId}/groups`).then(r => r.json());
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
-    },
-  });
 
       // Sort students by skill level (prioritize high skills)
       const sortedStudents = [...students].sort((a, b) => {
@@ -220,52 +151,29 @@ export default function GroupViewPage() {
     },
   });
 
-  const updateGroupMutation = useMutation({
-    mutationFn: async ({
-      groupId,
-      studentId,
-      targetGroupId,
-    }: {
-      groupId: number;
-      studentId: number;
-      targetGroupId: number;
-    }) => {
-      const sourceGroup = groups.find((g) => g.id === groupId);
-      const targetGroup = groups.find((g) => g.id === targetGroupId);
-      if (!sourceGroup || !targetGroup) return;
-
-      const newSourceStudentIds = sourceGroup.studentIds.filter(
-        (id) => id !== studentId
-      );
-      const newTargetStudentIds = [...targetGroup.studentIds, studentId];
-
-      await Promise.all([
-        apiRequest("PATCH", `/api/groups/${groupId}`, {
-          studentIds: newSourceStudentIds,
-        }),
-        apiRequest("PATCH", `/api/groups/${targetGroupId}`, {
-          studentIds: newTargetStudentIds,
-        }),
-      ]);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
-    },
-  });
-
   const getStudentById = (id: number) => students.find((s) => s.id === id);
 
-  const renderSkillLevel = (level: number) => {
-    return "★".repeat(level) + "☆".repeat(5 - level);
-  };
+  if (!form) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto">
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">Form not found.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold">{form?.title}</h1>
-            {form?.description && (
+            <h1 className="text-3xl font-bold">{form.title}</h1>
+            {form.description && (
               <p className="text-muted-foreground mt-2">{form.description}</p>
             )}
           </div>
@@ -327,7 +235,7 @@ export default function GroupViewPage() {
                 </Table>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Generate Groups</CardTitle>
@@ -358,7 +266,7 @@ export default function GroupViewPage() {
         ) : (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-3xl font-bold">Generated Groups</h2>
+              <h2 className="text-2xl font-bold">Generated Groups</h2>
               <Button
                 variant="outline"
                 size="sm"
@@ -369,13 +277,13 @@ export default function GroupViewPage() {
                 Regenerate
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {groups.map((group) => {
                 const groupStudents = students.filter(student => 
                   group.studentIds.includes(student.id)
                 );
-                
+
                 return (
                   <Card key={group.id}>
                     <CardHeader>
@@ -388,6 +296,15 @@ export default function GroupViewPage() {
                             <div>
                               <div className="font-medium">{student.name}</div>
                               <div className="text-sm text-muted-foreground">{student.major}</div>
+                              <div className="text-sm">
+                                {Object.entries(student.skills as Record<string, number>).map(
+                                  ([skill, level]) => (
+                                    <div key={skill}>
+                                      {skill}: {renderSkillLevel(level)}
+                                    </div>
+                                  )
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -397,77 +314,6 @@ export default function GroupViewPage() {
                 );
               })}
             </div>
-          </div>
-                          )
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {groups.map((group) => (
-              <Card key={group.id}>
-                <CardHeader>
-                  <CardTitle>{group.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableBody>
-                      {group.studentIds.map((studentId) => {
-                        const student = getStudentById(studentId);
-                        if (!student) return null;
-                        return (
-                          <TableRow key={studentId}>
-                            <TableCell>
-                              <div className="font-medium">{student.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {student.major}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                {Object.entries(
-                                  student.skills as Record<string, number>
-                                ).map(([skill, level]) => (
-                                  <div key={skill}>
-                                    {skill}: {renderSkillLevel(level)}
-                                  </div>
-                                ))}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <select
-                                className="w-full text-sm p-2 border rounded"
-                                onChange={(e) => {
-                                  updateGroupMutation.mutate({
-                                    groupId: group.id,
-                                    studentId: student.id,
-                                    targetGroupId: parseInt(e.target.value),
-                                  });
-                                }}
-                              >
-                                <option value={group.id}>Move to...</option>
-                                {groups
-                                  .filter((g) => g.id !== group.id)
-                                  .map((g) => (
-                                    <option key={g.id} value={g.id}>
-                                      {g.name}
-                                    </option>
-                                  ))}
-                              </select>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            ))}
           </div>
         )}
       </div>
