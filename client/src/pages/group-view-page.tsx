@@ -16,16 +16,18 @@ function renderSkillLevel(level: number): string {
 
 export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
-  const formId = parseInt(id);
+  const formId = parseInt(id || '');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Data fetching with proper error handling
-  const { data: form, isLoading: formLoading, error: formError } = useQuery<Form>({
+  // Fetch form data
+  const { data: form, isLoading: formLoading } = useQuery<Form>({
     queryKey: [`/api/forms/${formId}`],
     enabled: !isNaN(formId),
-    onError: () => {
-      console.error('Failed to fetch form data:', formError);
+    retry: 2,
+    staleTime: 5000,
+    onError: (error) => {
+      console.error('Failed to fetch form:', error);
       toast({
         title: "Error",
         description: "Failed to load form data. Please try again.",
@@ -34,17 +36,23 @@ export default function GroupViewPage() {
     }
   });
 
+  // Fetch students with proper error handling
   const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
     queryKey: [`/api/forms/${formId}/students`],
-    enabled: !isNaN(formId),
-    onSuccess: (data) => {
-      console.log(`Loaded ${data.length} student responses`);
+    enabled: !isNaN(formId) && !!form,
+    retry: 2,
+    staleTime: 5000,
+    onError: (error) => {
+      console.error('Failed to fetch students:', error);
     }
   });
 
+  // Fetch groups with proper error handling
   const { data: groups = [], isLoading: groupsLoading } = useQuery<Group[]>({
     queryKey: [`/api/forms/${formId}/groups`],
-    enabled: !isNaN(formId)
+    enabled: !isNaN(formId) && !!form,
+    retry: 2,
+    staleTime: 5000
   });
 
   const generateGroupsMutation = useMutation({
@@ -73,22 +81,7 @@ export default function GroupViewPage() {
     }
   });
 
-  // Error state for invalid form ID
-  if (isNaN(formId)) {
-    return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-7xl mx-auto">
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">Invalid form ID. Please check the URL and try again.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  // Loading state
+  // Show loading state
   if (formLoading || studentsLoading || groupsLoading) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -96,7 +89,7 @@ export default function GroupViewPage() {
           <Card>
             <CardContent className="py-8 text-center">
               <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading...</p>
+              <p className="text-muted-foreground">Loading data...</p>
             </CardContent>
           </Card>
         </div>
@@ -104,14 +97,16 @@ export default function GroupViewPage() {
     );
   }
 
-  // Form not found state
-  if (!form) {
+  // Handle invalid form ID
+  if (!form || !formId || isNaN(formId)) {
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">Form not found. Please check the URL and try again.</p>
+              <p className="text-muted-foreground">
+                Form not found. Please check the URL and try again.
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -122,6 +117,7 @@ export default function GroupViewPage() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Form header */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">{form.title}</h1>
@@ -139,6 +135,7 @@ export default function GroupViewPage() {
           </Button>
         </div>
 
+        {/* Show appropriate content based on data state */}
         {students.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center">
@@ -150,6 +147,7 @@ export default function GroupViewPage() {
           </Card>
         ) : (
           <div className="space-y-6">
+            {/* Student responses section */}
             <Card>
               <CardHeader>
                 <CardTitle>Student Responses</CardTitle>
@@ -180,6 +178,7 @@ export default function GroupViewPage() {
               </CardContent>
             </Card>
 
+            {/* Groups section */}
             {groups.length > 0 && (
               <div className="mt-8">
                 <h2 className="text-2xl font-bold mb-4">Generated Groups</h2>
