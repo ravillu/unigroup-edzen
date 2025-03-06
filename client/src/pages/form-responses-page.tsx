@@ -41,23 +41,40 @@ export default function FormResponsesPage() {
     refetchInterval: 5000,
   });
 
-  // Group generation mutation
+  // Group generation mutation with improved error handling
   const generateGroupsMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(
-        "POST",
-        `/api/forms/${formId}/groups/generate`,
-        {
-          groupSize,
-          skillPriorities
+      // Log the payload for debugging
+      const payload = {
+        groupSize,
+        skillPriorities: Object.fromEntries(
+          form?.questions.map((q: any) => [q.text, skillPriorities[q.text] || 1]) || []
+        )
+      };
+      console.log('Generating groups with payload:', payload);
+
+      try {
+        const response = await apiRequest(
+          "POST",
+          `/api/forms/${formId}/groups/generate`,
+          payload
+        );
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(responseData.message || 'Failed to generate groups');
         }
-      );
-      if (!response.ok) {
-        throw new Error('Failed to generate groups');
+
+        console.log('Groups generated successfully:', responseData);
+        return responseData;
+      } catch (error) {
+        console.error('Group generation error:', error);
+        throw error;
       }
-      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Groups generated:', data);
       queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
       toast({
         title: "Success",
@@ -65,11 +82,11 @@ export default function FormResponsesPage() {
       });
       setShowGroupConfig(false);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Failed to generate groups:', error);
       toast({
         title: "Error",
-        description: "Failed to generate groups. Please try again.",
+        description: error.message || "Failed to generate groups. Please try again.",
         variant: "destructive",
       });
     },
@@ -129,8 +146,8 @@ export default function FormResponsesPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold">{form.title}</h1>
-            {form.description && (
+            <h1 className="text-3xl font-bold">{form?.title}</h1>
+            {form?.description && (
               <p className="text-muted-foreground mt-2">{form.description}</p>
             )}
           </div>
@@ -169,21 +186,27 @@ export default function FormResponsesPage() {
 
                 <div className="space-y-4">
                   <Label>Skill Priorities</Label>
-                  {form.questions.map((question: any) => (
+                  {form?.questions.map((question: any) => (
                     <div key={question.id} className="grid gap-2">
                       <Label>{question.text}</Label>
-                      <Slider
-                        defaultValue={[skillPriorities[question.text] || 1]}
-                        max={5}
-                        min={1}
-                        step={1}
-                        onValueChange={([value]) => 
-                          setSkillPriorities(prev => ({
-                            ...prev,
-                            [question.text]: value
-                          }))
-                        }
-                      />
+                      <div className="flex items-center gap-4">
+                        <Slider
+                          defaultValue={[skillPriorities[question.text] || 1]}
+                          max={5}
+                          min={1}
+                          step={1}
+                          onValueChange={([value]) => 
+                            setSkillPriorities(prev => ({
+                              ...prev,
+                              [question.text]: value
+                            }))
+                          }
+                          className="flex-1"
+                        />
+                        <span className="w-8 text-center">
+                          {skillPriorities[question.text] || 1}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -227,7 +250,7 @@ export default function FormResponsesPage() {
                     <TableHead>Major</TableHead>
                     <TableHead>Year</TableHead>
                     <TableHead>NUin Status</TableHead>
-                    {(form.questions || []).map((question: any) => (
+                    {form?.questions.map((question: any) => (
                       <TableHead key={question.id}>{question.text}</TableHead>
                     ))}
                   </TableRow>
@@ -240,7 +263,7 @@ export default function FormResponsesPage() {
                       <TableCell>{student.major}</TableCell>
                       <TableCell>{student.academicYear}</TableCell>
                       <TableCell>{student.nunStatus}</TableCell>
-                      {(form.questions || []).map((question: any) => (
+                      {form?.questions.map((question: any) => (
                         <TableCell key={question.id}>
                           {renderSkillLevel((student.skills as any)[question.text])}
                         </TableCell>
