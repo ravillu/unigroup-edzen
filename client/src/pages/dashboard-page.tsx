@@ -107,8 +107,9 @@ export default function DashboardPage() {
                     <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="text-lg font-semibold">Create a New Survey</h3>
                     <p className="text-muted-foreground max-w-md mx-auto">
-                      Create a group formation survey and share the link with your students.
-                      You can manage responses and create groups manually.
+                      Create and customize your group formation survey. 
+                      Share it with your students and use our intelligent grouping system 
+                      to form balanced teams based on responses.
                     </p>
                     <Link href="/forms/new">
                       <Button className="gap-2">

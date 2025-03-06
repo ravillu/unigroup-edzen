@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   groupSize: z.number().min(3, "Group size must be at least 3").max(8, "Group size cannot exceed 8"),
+  courseId: z.number().optional(),
   questions: z.array(
     z.object({
       id: z.string(),
@@ -35,7 +36,6 @@ const formSchema = z.object({
       max: z.number(),
     })
   ),
-  courseId: z.number(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -83,7 +83,7 @@ export default function FormBuilderPage() {
   const [questions, setQuestions] = useState(defaultQuestions);
   const { toast } = useToast();
 
-  // Get courseId and courseName from URL
+  // Get courseId and courseName from URL if available
   const params = new URLSearchParams(window.location.search);
   const courseId = parseInt(params.get("courseId") || "0");
   const courseName = params.get("courseName") || "";
@@ -91,10 +91,11 @@ export default function FormBuilderPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: decodeURIComponent(courseName),
+      title: decodeURIComponent(courseName) || "Student Group Formation Survey",
+      description: "Please rate your skills and preferences to help us form balanced teams.",
       questions: defaultQuestions,
       groupSize: 4,
-      courseId,
+      courseId: courseId || undefined,
     },
   });
 
@@ -104,12 +105,25 @@ export default function FormBuilderPage() {
       const formRes = await apiRequest("POST", "/api/forms", values);
       const formData = await formRes.json();
 
-      // Then create Canvas assignment
-      const assignmentRes = await apiRequest("POST", `/api/canvas/courses/${values.courseId}/assignments`, {
-        formId: formData.id,
-        name: values.title,
-        description: values.description,
-      });
+      // Then create Canvas assignment if courseId exists
+      if (values.courseId) {
+        try {
+          const assignmentRes = await apiRequest("POST", `/api/canvas/courses/${values.courseId}/assignments`, {
+            formId: formData.id,
+            name: values.title,
+            description: values.description,
+          });
+
+          if (!assignmentRes.ok) {
+            throw new Error("Failed to create Canvas assignment. The form was created and can be shared manually.");
+          }
+        } catch (error) {
+          toast({
+            title: "Note",
+            description: "Form created successfully but Canvas integration failed. You can share the form link directly with students.",
+          });
+        }
+      }
 
       return formData;
     },
@@ -117,7 +131,7 @@ export default function FormBuilderPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/forms"] });
       toast({
         title: "Success",
-        description: "Form published and assignment created in Canvas",
+        description: "Survey created successfully!",
       });
       setLocation("/");
     },
@@ -172,7 +186,7 @@ export default function FormBuilderPage() {
       </header>
 
       <div className="max-w-4xl mx-auto p-8 mt-16">
-        <h1 className="text-3xl font-bold mb-8">Create Survey</h1>
+        <h1 className="text-3xl font-bold mb-8">Create Group Formation Survey</h1>
 
         <Form {...form}>
           <form
@@ -186,7 +200,7 @@ export default function FormBuilderPage() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assignment Title</FormLabel>
+                      <FormLabel>Survey Title</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -200,13 +214,16 @@ export default function FormBuilderPage() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assignment Instructions</FormLabel>
+                      <FormLabel>Survey Description</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Enter instructions for students"
                           {...field}
                         />
                       </FormControl>
+                      <FormDescription>
+                        Explain to students how their responses will be used to create balanced groups
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -228,7 +245,7 @@ export default function FormBuilderPage() {
                         />
                       </FormControl>
                       <FormDescription>
-                        Choose the ideal size for each group. Students will be distributed evenly across groups.
+                        Choose the ideal size for each group. Our algorithm will distribute students evenly while optimizing skill balance.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -282,7 +299,7 @@ export default function FormBuilderPage() {
                                     setQuestions(newQuestions);
                                     form.setValue("questions", newQuestions);
                                   }}
-                                  placeholder="Enter question text"
+                                  placeholder="Enter skill or attribute to assess"
                                   className="flex-1"
                                 />
                                 <Button
@@ -329,7 +346,7 @@ export default function FormBuilderPage() {
                 className="gap-2"
               >
                 <FileText className="h-4 w-4" />
-                Publish Assignment
+                Create Survey
               </Button>
             </div>
           </form>
