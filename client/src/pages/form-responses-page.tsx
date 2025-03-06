@@ -13,29 +13,52 @@ function renderSkillLevel(level: number): string {
 
 export default function FormResponsesPage() {
   const { id } = useParams<{ id: string }>();
-  const formId = id ? parseInt(id) : null;
+  const formId = parseInt(id || '0');
 
-  console.log('Form ID:', formId); // Debug log
-
-  const { data: form, isLoading: formLoading, error: formError } = useQuery<Form>({
-    queryKey: [`/api/forms/${formId}`],
-    enabled: formId !== null,
-    retry: 3,
-    onError: (error) => {
-      console.error('Failed to fetch form:', error);
-    }
+  // Debug logs
+  console.log('Attempting to load form:', {
+    rawId: id,
+    parsedId: formId,
+    isValid: !isNaN(formId) && formId > 0
   });
 
+  // Fetch form data with strict type checking
+  const { data: form, isLoading: formLoading } = useQuery<Form>({
+    queryKey: ['/api/forms', formId],
+    enabled: !isNaN(formId) && formId > 0,
+  });
+
+  // Fetch students with real-time updates
   const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
-    queryKey: [`/api/forms/${formId}/students`],
-    enabled: formId !== null && !!form,
-    retry: 3,
-    refetchInterval: 5000, // Refresh every 5 seconds
+    queryKey: ['/api/forms', formId, 'students'],
+    enabled: !isNaN(formId) && formId > 0,
+    refetchInterval: 5000, // Real-time updates every 5 seconds
   });
 
   // Debug logs
-  console.log('Form data:', form);
-  console.log('Student responses:', students);
+  console.log('Form loaded:', form);
+  console.log('Students loaded:', students);
+
+  // Invalid form ID
+  if (isNaN(formId) || formId <= 0) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto">
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">Invalid form URL. Please check the link and try again.</p>
+              <pre className="mt-4 text-xs bg-muted p-4 rounded">
+                Debug Info:
+                Raw ID: {id}
+                Parsed ID: {formId}
+                Is Valid: {(!isNaN(formId) && formId > 0).toString()}
+              </pre>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   // Loading state
   if (formLoading) {
@@ -46,12 +69,6 @@ export default function FormResponsesPage() {
             <CardContent className="py-8 text-center">
               <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
               <p className="text-muted-foreground">Loading form data...</p>
-              <pre className="mt-4 text-xs bg-muted p-4 rounded">
-                Debug Info:
-                formId: {formId}
-                type: {typeof formId}
-                isNaN: {isNaN(formId as number)}
-              </pre>
             </CardContent>
           </Card>
         </div>
@@ -59,7 +76,7 @@ export default function FormResponsesPage() {
     );
   }
 
-  // Form not found state
+  // Form not found
   if (!form) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -69,11 +86,8 @@ export default function FormResponsesPage() {
               <p className="text-muted-foreground">Form not found. Please check the URL and try again.</p>
               <pre className="mt-4 text-xs bg-muted p-4 rounded">
                 Debug Info:
-                formId: {formId}
-                type: {typeof formId}
-                isNaN: {isNaN(formId as number)}
-                raw id param: {id}
-                error: {formError?.message}
+                Form ID: {formId}
+                Query Key: {JSON.stringify(['/api/forms', formId])}
               </pre>
             </CardContent>
           </Card>
@@ -82,6 +96,7 @@ export default function FormResponsesPage() {
     );
   }
 
+  // Render the responses page
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
@@ -139,12 +154,6 @@ export default function FormResponsesPage() {
                 <p className="text-muted-foreground">
                   No responses yet. Waiting for students to submit the form...
                 </p>
-                <pre className="mt-4 text-xs bg-muted p-4 rounded overflow-auto">
-                  Debug Info:
-                  formId: {formId}
-                  studentsLoading: {studentsLoading.toString()}
-                  form: {JSON.stringify(form, null, 2)}
-                </pre>
               </div>
             )}
           </CardContent>
