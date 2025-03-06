@@ -45,14 +45,17 @@ export default function CanvasIntegrationPage() {
   const [, setLocation] = useLocation();
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [step, setStep] = useState(1);
+  const user = null; // Placeholder, needs to be fetched from context or similar
 
   const form = useForm<CanvasConfigForm>({
     resolver: zodResolver(canvasConfigSchema),
   });
 
   // Fetch Canvas courses
-  const { data: courses = [], isLoading: coursesLoading } = useQuery<CanvasCourse[]>({
+  const { data: courses = [], isLoading: coursesLoading, error: coursesError } = useQuery<CanvasCourse[]>({
     queryKey: ["/api/canvas/courses"],
+    enabled: !!user?.canvasToken, //Conditionally enable based on user's token.  Replace null with actual user data.
+    retry: 1,
   });
 
   // Fetch students for selected course
@@ -124,15 +127,15 @@ export default function CanvasIntegrationPage() {
                   <p className="text-sm text-muted-foreground">
                     Note: You can always set up Canvas integration later from your dashboard.
                   </p>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       toast({
                         title: "Canvas Integration Skipped",
                         description: "You can set this up later from your dashboard settings.",
                       });
                       setLocation("/");
-                    }} 
+                    }}
                     className="w-full"
                   >
                     Skip for Now
@@ -191,9 +194,9 @@ export default function CanvasIntegrationPage() {
                         <FormItem>
                           <FormLabel>Canvas Instance URL</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="e.g. https://northeastern.instructure.com" 
-                              {...field} 
+                            <Input
+                              placeholder="e.g. https://northeastern.instructure.com"
+                              {...field}
                             />
                           </FormControl>
                           <FormDescription>
@@ -211,10 +214,7 @@ export default function CanvasIntegrationPage() {
                         <FormItem>
                           <FormLabel>Canvas API Token</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="password" 
-                              {...field} 
-                            />
+                            <Input type="password" {...field} />
                           </FormControl>
                           <FormDescription>
                             The API token you generated in Step 1
@@ -251,6 +251,36 @@ export default function CanvasIntegrationPage() {
                 {coursesLoading ? (
                   <div className="flex items-center justify-center h-40">
                     <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : coursesError ? (
+                  <div className="text-center space-y-4">
+                    <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+                    <h3 className="text-lg font-semibold">Canvas Connection Failed</h3>
+                    <p className="text-muted-foreground">
+                      {coursesError instanceof Error ? coursesError.message : "Failed to connect to Canvas"}
+                    </p>
+                    <div className="flex gap-4 mt-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => setStep(3)}
+                        className="flex-1"
+                      >
+                        Try Again
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          toast({
+                            title: "Canvas Integration Skipped",
+                            description: "You can set this up later from your dashboard settings.",
+                          });
+                          setLocation("/");
+                        }}
+                        className="flex-1"
+                      >
+                        Skip for Now
+                      </Button>
+                    </div>
                   </div>
                 ) : courses.length > 0 ? (
                   <div className="space-y-4">
@@ -289,8 +319,8 @@ export default function CanvasIntegrationPage() {
                       <li>The Canvas instance URL is incorrect</li>
                     </ul>
                     <div className="flex gap-4 mt-4">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => setStep(3)}
                         className="flex-1"
                       >

@@ -13,46 +13,60 @@ class CanvasService {
   private baseUrl: string;
 
   constructor(user?: User) {
-    let token: string | undefined;
-    let url: string | undefined;
-
-    if (user) {
-      // Use user-specific credentials if available
-      token = user.canvasToken;
-      url = user.canvasInstanceUrl;
-    } else {
-      // Fall back to environment variables
-      token = process.env.CANVAS_API_TOKEN;
-      url = process.env.CANVAS_INSTANCE_URL;
+    // Check user credentials first
+    if (user?.canvasToken && user?.canvasInstanceUrl) {
+      this.apiToken = user.canvasToken;
+      this.baseUrl = user.canvasInstanceUrl;
+    } 
+    // Fall back to environment variables
+    else if (process.env.CANVAS_API_TOKEN && process.env.CANVAS_INSTANCE_URL) {
+      this.apiToken = process.env.CANVAS_API_TOKEN;
+      this.baseUrl = process.env.CANVAS_INSTANCE_URL;
+    }
+    else {
+      throw new Error(
+        "Canvas credentials not found. Please make sure you have entered your Canvas API token and instance URL."
+      );
     }
 
-    if (!token || !url) {
-      throw new Error('Canvas API credentials not properly configured');
-    }
-
-    this.apiToken = token;
-    this.baseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+    // Clean up the base URL
+    this.baseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
   }
 
   private async request(endpoint: string) {
     try {
-      console.log('Making Canvas API request to:', `${this.baseUrl}/api/v1/${endpoint}`);
-      const response = await axios.get(`${this.baseUrl}/api/v1/${endpoint}`, {
+      const url = `${this.baseUrl}/api/v1/${endpoint}`;
+      console.log('Making Canvas API request to:', url);
+
+      const response = await axios.get(url, {
         headers: {
           'Authorization': `Bearer ${this.apiToken}`,
           'Accept': 'application/json'
         }
       });
-      console.log('Canvas API response:', response.data);
+
       return response.data;
     } catch (error: any) {
       console.error('Canvas API Error:', {
         status: error.response?.status,
         message: error.response?.data?.message || error.message,
         endpoint,
-        headers: error.response?.headers
       });
-      throw error;
+
+      // Provide more helpful error messages based on status code
+      if (error.response?.status === 401) {
+        throw new Error(
+          "Invalid Canvas API token. Please check your token and try again."
+        );
+      } else if (error.response?.status === 404) {
+        throw new Error(
+          "Could not connect to Canvas. Please verify your Canvas instance URL."
+        );
+      } else {
+        throw new Error(
+          `Canvas API error: ${error.response?.data?.message || error.message}`
+        );
+      }
     }
   }
 
@@ -62,23 +76,27 @@ class CanvasService {
       const courses = await this.request(
         'courses?enrollment_type=teacher&include[]=total_students&per_page=100'
       );
+
+      if (!Array.isArray(courses)) {
+        throw new Error("Unexpected response format from Canvas API");
+      }
+
       return courses;
     } catch (error) {
       console.error('Failed to fetch courses:', error);
-      throw new Error('Failed to fetch Canvas courses');
+      throw error;
     }
   }
 
   async getCourseStudents(courseId: number) {
     try {
-      // Fetch all students including inactive ones
       const students = await this.request(
         `courses/${courseId}/users?enrollment_type[]=student&per_page=100&include[]=email&include[]=enrollments`
       );
       return students;
     } catch (error) {
       console.error(`Failed to fetch students for course ${courseId}:`, error);
-      throw new Error('Failed to fetch Canvas course students');
+      throw error;
     }
   }
 
@@ -105,7 +123,9 @@ class CanvasService {
       return response.data;
     } catch (error: any) {
       console.error(`Failed to create assignment in course ${courseId}:`, error);
-      throw new Error('Failed to create Canvas assignment');
+      throw new Error(
+        `Failed to create Canvas assignment: ${error.response?.data?.message || error.message}`
+      );
     }
   }
 }
