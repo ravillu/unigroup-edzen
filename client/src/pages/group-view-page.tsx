@@ -56,8 +56,8 @@ function calculateGroupFitness(group: Student[], newStudent: Student): number {
   }, {});
 
   Object.entries(newStudent.skills as Record<string, number>).forEach(([skill, level]) => {
-    const avgSkill = existingSkills[skill] 
-      ? existingSkills[skill].reduce((a, b) => a + b, 0) / existingSkills[skill].length 
+    const avgSkill = existingSkills[skill]
+      ? existingSkills[skill].reduce((a, b) => a + b, 0) / existingSkills[skill].length
       : 0;
     if (Math.abs(avgSkill - level) >= 2) {
       fitness += 1; // Reward skill diversity
@@ -101,6 +101,51 @@ export default function GroupViewPage() {
     enabled: !isNaN(formId),
   });
 
+  // Error handling for invalid form ID
+  if (isNaN(formId)) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto">
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">Invalid form ID. Please check the URL and try again.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (formLoading || studentsLoading || groupsLoading) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto">
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">Loading...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Form not found
+  if (!form) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto">
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">Form not found. Please check the URL and try again.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   const generateGroupsMutation = useMutation({
     mutationFn: async () => {
       // Advanced group generation algorithm
@@ -117,7 +162,7 @@ export default function GroupViewPage() {
       });
 
       // First pass: distribute students with high skills
-      const highSkilledStudents = sortedStudents.filter(student => 
+      const highSkilledStudents = sortedStudents.filter(student =>
         Object.values(student.skills as Record<string, number>).some(skill => skill >= 4)
       );
 
@@ -126,7 +171,7 @@ export default function GroupViewPage() {
       });
 
       // Second pass: distribute remaining students
-      const remainingStudents = sortedStudents.filter(student => 
+      const remainingStudents = sortedStudents.filter(student =>
         !Object.values(student.skills as Record<string, number>).some(skill => skill >= 4)
       );
 
@@ -153,48 +198,6 @@ export default function GroupViewPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
     },
   });
-
-  if (isNaN(formId)) {
-    return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-7xl mx-auto">
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">Invalid form ID.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (formLoading || studentsLoading || groupsLoading) {
-    return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-7xl mx-auto">
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">Loading...</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  if (!form) {
-    return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-7xl mx-auto">
-          <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">Form not found.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -273,8 +276,8 @@ export default function GroupViewPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
-                  onClick={() => generateGroupsMutation.mutate()} 
+                <Button
+                  onClick={() => generateGroupsMutation.mutate()}
                   disabled={generateGroupsMutation.isPending}
                 >
                   {generateGroupsMutation.isPending ? (
@@ -309,7 +312,7 @@ export default function GroupViewPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {groups.map((group) => {
-                const groupStudents = students.filter(student => 
+                const groupStudents = students.filter(student =>
                   group.studentIds.includes(student.id)
                 );
 

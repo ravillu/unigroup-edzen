@@ -144,11 +144,7 @@ export default function StudentFormPage() {
     },
     onSuccess: () => {
       setSubmitted(true);
-      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/students`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
-      setTimeout(() => {
-        setLocation(`/forms/${formId}`);
-      }, 2000);
+      // Don't redirect to group view, just show thank you message
     },
   });
 
@@ -188,7 +184,7 @@ export default function StudentFormPage() {
             <CardContent className="py-8 text-center">
               <h2 className="text-2xl font-bold mb-4">Thank You!</h2>
               <p className="text-muted-foreground">
-                Your response has been recorded.
+                Your response has been recorded. The professor will review and create groups based on your responses.
               </p>
             </CardContent>
           </Card>
