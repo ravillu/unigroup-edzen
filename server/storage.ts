@@ -1,98 +1,86 @@
-import { IStorage } from "./types";
-import { User, InsertUser, Form, InsertForm, Student, InsertStudent, Group, InsertGroup } from "@shared/schema";
+import { users, forms, students, groups } from "@shared/schema";
+import { type User, type InsertUser, type Form, type InsertForm, type Student, type InsertStudent, type Group, type InsertGroup } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private forms: Map<number, Form>;
-  private students: Map<number, Student>;
-  private groups: Map<number, Group>;
+export class DatabaseStorage {
   public sessionStore: session.Store;
-  private currentId: { [key: string]: number };
 
   constructor() {
-    this.users = new Map();
-    this.forms = new Map();
-    this.students = new Map();
-    this.groups = new Map();
-    this.currentId = { users: 1, forms: 1, students: 1, groups: 1 };
-    this.sessionStore = new MemoryStore({ checkPeriod: 86400000 });
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL must be set");
+    }
+    this.sessionStore = new PostgresSessionStore({
+      conObject: {
+        connectionString: process.env.DATABASE_URL,
+      },
+      createTableIfMissing: true,
+    });
   }
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId.users++;
-    const user = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   // Form methods
   async createForm(insertForm: InsertForm): Promise<Form> {
-    const id = this.currentId.forms++;
-    const form = { ...insertForm, id };
-    this.forms.set(id, form);
+    const [form] = await db.insert(forms).values(insertForm).returning();
     return form;
   }
 
   async getFormsByProfessor(professorId: number): Promise<Form[]> {
-    return Array.from(this.forms.values()).filter(
-      (form) => form.professorId === professorId
-    );
+    return await db.select().from(forms).where(eq(forms.professorId, professorId));
   }
 
   async getForm(id: number): Promise<Form | undefined> {
-    return this.forms.get(id);
+    const [form] = await db.select().from(forms).where(eq(forms.id, id));
+    return form;
   }
 
   // Student methods
   async createStudent(insertStudent: InsertStudent): Promise<Student> {
-    const id = this.currentId.students++;
-    const student = { ...insertStudent, id };
-    this.students.set(id, student);
+    const [student] = await db.insert(students).values(insertStudent).returning();
     return student;
   }
 
   async getStudentsByForm(formId: number): Promise<Student[]> {
-    return Array.from(this.students.values()).filter(
-      (student) => student.formId === formId
-    );
+    return await db.select().from(students).where(eq(students.formId, formId));
   }
 
   // Group methods
   async createGroup(insertGroup: InsertGroup): Promise<Group> {
-    const id = this.currentId.groups++;
-    const group = { ...insertGroup, id };
-    this.groups.set(id, group);
+    const [group] = await db.insert(groups).values(insertGroup).returning();
     return group;
   }
 
   async getGroupsByForm(formId: number): Promise<Group[]> {
-    return Array.from(this.groups.values()).filter(
-      (group) => group.formId === formId
-    );
+    return await db.select().from(groups).where(eq(groups.formId, formId));
   }
 
-  async updateGroup(id: number, group: Partial<Group>): Promise<Group> {
-    const existing = this.groups.get(id);
-    if (!existing) throw new Error("Group not found");
-    const updated = { ...existing, ...group };
-    this.groups.set(id, updated);
-    return updated;
+  async updateGroup(id: number, groupData: Partial<Group>): Promise<Group> {
+    const [group] = await db
+      .update(groups)
+      .set(groupData)
+      .where(eq(groups.id, id))
+      .returning();
+    return group;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
