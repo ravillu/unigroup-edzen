@@ -16,13 +16,14 @@ import CanvasIntegrationPage from "@/pages/canvas-integration-page";
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={DashboardPage} requireCanvasSetup={true} />
-      <ProtectedRoute path="/forms/new" component={FormBuilderPage} requireCanvasSetup={true} />
+      <ProtectedRoute path="/" component={DashboardPage} />
+      <ProtectedRoute path="/forms/new" component={FormBuilderPage} />
       <ProtectedRoute path="/canvas" component={CanvasIntegrationPage} />
       <Route path="/forms/:id/responses" component={FormResponsesPage} />
       <Route path="/forms/:id/submit" component={StudentFormPage} />
       <Route path="/forms/:id/groups" component={GroupViewPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/api/auth/canvas/callback" component={CanvasIntegrationPage} />
       <Route component={NotFound} />
     </Switch>
   );

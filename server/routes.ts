@@ -61,76 +61,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Institution ID is required" });
       }
 
-      // For test Canvas instance
-      const institution = {
+      // Test institution setup for Canvas.instructure.com
+      const testInstitution = {
         id: parseInt(institution_id as string),
         name: "Test Institution",
         canvasInstanceUrl: "canvas.instructure.com",
-        canvasClientId: process.env.CANVAS_CLIENT_ID || "test_client_id",
-        canvasClientSecret: process.env.CANVAS_CLIENT_SECRET || "test_client_secret",
+        canvasClientId: process.env.CANVAS_CLIENT_ID,
+        canvasClientSecret: process.env.CANVAS_CLIENT_SECRET,
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
-      const authService = createCanvasAuthService(institution);
-      const authUrl = authService.getAuthorizationUrl(institution_id as string);
+      const authService = createCanvasAuthService(testInstitution);
+      const authUrl = authService.getAuthorizationUrl();
       res.redirect(authUrl);
     } catch (error) {
       console.error('Canvas auth error:', error);
-      res.redirect('/auth?error=canvas_auth_failed');
+      res.redirect('/canvas?error=canvas_auth_failed');
     }
   });
 
   app.get("/api/auth/canvas/callback", async (req, res) => {
     try {
-      const { code, state } = req.query;
-      if (!code || typeof code !== 'string' || !state) {
-        throw new Error('Invalid authorization code or state');
+      const { code } = req.query;
+
+      if (!code || typeof code !== 'string') {
+        throw new Error('Invalid authorization code');
       }
 
-      const institutionId = parseInt(state as string);
-      const institution = await storage.getInstitution(institutionId);
+      // For test institution
+      const testInstitution = {
+        id: 1,
+        name: "Test Institution",
+        canvasInstanceUrl: "canvas.instructure.com",
+        canvasClientId: process.env.CANVAS_CLIENT_ID,
+        canvasClientSecret: process.env.CANVAS_CLIENT_SECRET,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      if (!institution) {
-        throw new Error('Institution not found');
-      }
-
-      const authService = createCanvasAuthService(institution);
-
-      // Exchange code for token
+      const authService = createCanvasAuthService(testInstitution);
       const tokenData = await authService.getTokenFromCode(code);
 
-      // Get user profile
+      // Get Canvas user profile
       const profile = await authService.getUserProfile(tokenData.access_token);
 
-      // Store institution and token in session
-      req.session.canvasToken = tokenData.access_token;
-      req.session.institutionId = institutionId;
-
-      // Update or create user
-      let user = await storage.getUserByUsername(profile.login_id);
-      if (!user) {
-        user = await storage.createUser({
-          username: profile.login_id,
-          email: profile.primary_email,
-          institutionId,
-          canvasId: profile.id,
-          canvasToken: tokenData.access_token
-        });
-      }
-
-      // Log the user in
-      req.login(user, (err) => {
-        if (err) {
-          console.error('Login error:', err);
-          res.redirect('/auth?error=login_failed');
-          return;
-        }
-        res.redirect('/');
+      // Update user with Canvas token
+      const updatedUser = await storage.updateUser(req.user.id, {
+        canvasToken: tokenData.access_token,
+        updatedAt: new Date()
       });
+
+      // Update the session
+      req.user.canvasToken = tokenData.access_token;
+
+      res.redirect('/');
     } catch (error) {
-      console.error('Canvas OAuth error:', error);
-      res.redirect('/auth?error=canvas_auth_failed');
+      console.error('Canvas OAuth callback error:', error);
+      res.redirect('/canvas?error=canvas_auth_failed');
     }
   });
 
