@@ -26,10 +26,12 @@ class DatabasePool {
   static async getInstance(): Promise<Pool> {
     if (!this.instance) {
       try {
+        console.log('Creating new database pool...');
         this.instance = new Pool(poolConfig);
 
         // Test the connection
         const client = await this.instance.connect();
+        await client.query('SELECT 1'); // Verify we can execute queries
         client.release();
 
         console.log('Database connection established successfully');
@@ -71,8 +73,15 @@ let db: ReturnType<typeof drizzle>;
 
 // Export asynchronous initialization function
 export async function initializeDatabase() {
-  pool = await DatabasePool.getInstance();
-  db = drizzle({ client: pool, schema });
+  try {
+    console.log('Initializing database connection...');
+    pool = await DatabasePool.getInstance();
+    db = drizzle({ client: pool, schema });
+    console.log('Database initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    throw error;
+  }
 }
 
 // Handle uncaught promise rejections
