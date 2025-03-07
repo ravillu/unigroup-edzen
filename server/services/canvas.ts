@@ -21,58 +21,60 @@ class CanvasService {
 
     this.apiToken = user.canvasToken;
 
-    // Clean and format the base URL
+    // Normalize the Canvas URL format
     let baseUrl = user.canvasInstanceUrl.trim();
-    // Remove trailing slashes
-    baseUrl = baseUrl.replace(/\/+$/, '');
-    // Ensure https:// prefix
-    if (!/^https?:\/\//i.test(baseUrl)) {
-      baseUrl = `https://${baseUrl}`;
+    if (baseUrl.includes('northeastern.instructure.com')) {
+      // Extract just the domain if full URL is provided
+      baseUrl = 'northeastern.instructure.com';
     }
-    this.baseUrl = baseUrl;
+    this.baseUrl = `https://${baseUrl}`;
 
-    console.log('Canvas Service Configuration:', {
+    console.log('Canvas Service initialized:', {
       hasToken: !!this.apiToken,
       baseUrl: this.baseUrl,
-      tokenLength: this.apiToken?.length
+      tokenPrefix: this.apiToken.substring(0, 5) + '...'
     });
   }
 
   private async request(endpoint: string) {
+    const url = `${this.baseUrl}/api/v1${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    console.log('Making Canvas API request:', { url });
+
     try {
-      // Ensure endpoint starts with a forward slash
-      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-      const url = `${this.baseUrl}/api/v1${cleanEndpoint}`;
-
-      console.log('Making Canvas API request to:', url);
-
       const response = await axios({
         method: 'get',
         url,
         headers: {
           'Authorization': `Bearer ${this.apiToken}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Accept': 'application/json'
         },
-        validateStatus: null // Don't throw on any status code
+        validateStatus: null
       });
 
-      // Log response details for debugging
       console.log('Canvas API Response:', {
         status: response.status,
         contentType: response.headers['content-type'],
-        isHtml: response.headers['content-type']?.includes('text/html'),
-        data: typeof response.data
+        responseType: typeof response.data
       });
 
-      // Check for HTML response
+      // Check for HTML response (error case)
       if (response.headers['content-type']?.includes('text/html')) {
-        throw new Error(`Received HTML instead of JSON. Please verify your Canvas URL: ${this.baseUrl}`);
+        console.error('Received HTML response instead of JSON');
+        throw new Error(
+          'Invalid Canvas API response. Please ensure you are using a valid Canvas API token and the correct Canvas URL (northeastern.instructure.com)'
+        );
       }
 
       // Handle error status codes
+      if (response.status === 401) {
+        throw new Error('Invalid or expired Canvas API token');
+      }
+
       if (response.status >= 400) {
-        throw new Error(response.data?.message || `Canvas API error (${response.status})`);
+        throw new Error(
+          response.data?.message || 
+          `Canvas API returned error status: ${response.status}`
+        );
       }
 
       return response.data;
@@ -81,36 +83,25 @@ class CanvasService {
         message: error.message,
         status: error.response?.status,
         contentType: error.response?.headers?.['content-type'],
-        data: error.response?.data
+        url
       });
 
-      if (error.response?.status === 401) {
-        throw new Error("Invalid Canvas API token. Please check your token and try again.");
-      } else if (error.response?.status === 404) {
-        throw new Error("Could not connect to Canvas. Please verify your Canvas instance URL.");
-      } else if (error.message.includes('text/html')) {
-        throw new Error("Received HTML response. Please ensure you're using the correct Canvas API URL.");
-      } else {
-        throw new Error(`Canvas API error: ${error.response?.data?.message || error.message}`);
-      }
+      throw new Error(
+        'Failed to connect to Canvas API. Please verify your Canvas URL (northeastern.instructure.com) and API token.'
+      );
     }
   }
 
   async getCourses() {
     try {
+      console.log('Fetching Canvas courses...');
       const courses = await this.request('/courses?enrollment_type=teacher&include[]=total_students&per_page=100');
-
-      if (!Array.isArray(courses)) {
-        throw new Error("Unexpected response format from Canvas API");
-      }
-
-      return courses;
+      return Array.isArray(courses) ? courses : [];
     } catch (error) {
       console.error('Failed to fetch courses:', error);
       throw error;
     }
   }
-
   async getCourseStudents(courseId: number) {
     try {
       const students = await this.request(
@@ -144,10 +135,6 @@ class CanvasService {
         }
       });
 
-      if (response.status >= 400) {
-        throw new Error(response.data?.message || 'Failed to create assignment');
-      }
-
       return response.data;
     } catch (error: any) {
       console.error(`Failed to create assignment in course ${courseId}:`, error);
@@ -158,7 +145,6 @@ class CanvasService {
   }
 }
 
-// Create a factory function to get user-specific canvas service
 export const createCanvasService = (user?: User) => {
   return new CanvasService(user);
 };

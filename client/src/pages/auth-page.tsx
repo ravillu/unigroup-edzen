@@ -17,7 +17,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as framerMotion from "framer-motion";
 import {
   AtSign,
@@ -25,8 +24,6 @@ import {
   User,
   EyeOff,
   Eye,
-  AlertCircle,
-  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -126,34 +123,8 @@ export default function AuthPage() {
   };
 
   useEffect(() => {
-    // Handle OAuth errors
-    const urlParams = new URLSearchParams(window.location.search);
-    const error = urlParams.get('error');
-
-    if (error) {
-      toast({
-        title: "Authentication Error",
-        description: error === 'canvas_auth_failed'
-          ? "Failed to authenticate with Canvas. Please try again."
-          : "Authentication failed. Please try again.",
-        variant: "destructive"
-      });
-
-      // Clear the error from URL
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, [toast]);
-
-  useEffect(() => {
     if (user) {
-      console.log("Auth state:", { user, hasCanvasToken: user.canvasToken });
-      if (user.canvasToken) {
-        setLocation("/");
-      } else {
-        setLocation("/canvas");
-      }
-    } else {
-      console.log("No authenticated user");
+      setLocation("/");
     }
   }, [user, setLocation]);
 

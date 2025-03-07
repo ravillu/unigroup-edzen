@@ -28,7 +28,16 @@ interface CanvasCourse {
 }
 
 const canvasConfigSchema = z.object({
-  canvasInstanceUrl: z.string().url("Please enter a valid Canvas URL"),
+  canvasInstanceUrl: z.string()
+    .min(1, "Canvas URL is required")
+    .transform(url => {
+      // Normalize the URL to ensure correct format
+      url = url.trim().toLowerCase();
+      if (url.includes('northeastern.instructure.com')) {
+        return 'northeastern.instructure.com';
+      }
+      return url;
+    }),
   canvasToken: z.string().min(1, "API token is required"),
 });
 
@@ -43,6 +52,10 @@ export default function CanvasIntegrationPage() {
 
   const form = useForm<CanvasConfigForm>({
     resolver: zodResolver(canvasConfigSchema),
+    defaultValues: {
+      canvasInstanceUrl: 'northeastern.instructure.com',
+      canvasToken: ''
+    }
   });
 
   const skipCanvasSetup = async () => {
