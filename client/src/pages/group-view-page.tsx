@@ -4,7 +4,7 @@ import { Form, Student, Group } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, GripVertical } from "lucide-react";
+import { RefreshCw, GripVertical, Upload, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -112,6 +112,39 @@ export default function GroupViewPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });
+    }
+  });
+
+  const publishToCanvasMutation = useMutation({
+    mutationFn: async () => {
+      const courseId = 1; 
+
+      const res = await apiRequest(
+        "POST",
+        `/api/forms/${formId}/groups/publish`,
+        { courseId }
+      );
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to publish groups to Canvas');
+      }
+
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Groups have been published to Canvas successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      console.error('Failed to publish groups to Canvas:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to publish groups to Canvas. Please try again.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -280,6 +313,24 @@ export default function GroupViewPage() {
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${generateGroupsMutation.isPending ? 'animate-spin' : ''}`} />
                 {generateGroupsMutation.isPending ? 'Generating Groups...' : 'Generate Groups'}
+              </Button>
+              <Button
+                onClick={() => publishToCanvasMutation.mutate()}
+                disabled={publishToCanvasMutation.isPending || groups.length === 0}
+                variant="outline"
+                className="ml-4"
+              >
+                {publishToCanvasMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Publishing to Canvas...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Publish to Canvas
+                  </>
+                )}
               </Button>
 
               {groups.length > 0 && (

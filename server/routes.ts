@@ -381,6 +381,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add this route handler for publishing groups to Canvas
+  app.post("/api/forms/:formId/groups/publish", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+
+    try {
+      const formId = parseInt(req.params.formId);
+      const { courseId } = req.body;
+
+      if (!courseId) {
+        return res.status(400).json({ message: "Course ID is required" });
+      }
+
+      // Get form details
+      const form = await storage.getForm(formId);
+      if (!form) {
+        return res.status(404).json({ message: "Form not found" });
+      }
+
+      // Get existing groups
+      const groups = await storage.getGroupsByForm(formId);
+      if (!groups.length) {
+        return res.status(400).json({ message: "No groups found to publish" });
+      }
+
+      // Get students for mapping Canvas IDs
+      const students = await storage.getStudentsByForm(formId);
+
+      // Create Canvas service instance
+      const canvasService = createCanvasService(req.user);
+
+      // Create a group category in Canvas
+      const groupCategory = await canvasService.createGroupCategory(courseId, {
+        name: `${form.title} Groups`,
+        description: "Automatically generated groups using UniGroup's AI algorithm"
+      });
+
+      // Create each group in Canvas and add members
+      const canvasGroups = await Promise.all(
+        groups.map(async (group) => {
+          const groupStudents = students.filter(s => group.studentIds.includes(s.id));
+          const canvasUserIds = groupStudents.map(s => s.canvasId).filter(Boolean);
+
+          return await canvasService.createGroup(groupCategory.id, {
+            name: group.name,
+            description: `Group members: ${groupStudents.map(s => s.name).join(', ')}`,
+            users: canvasUserIds as number[]
+          });
+        })
+      );
+
+      res.json({
+        message: "Groups successfully published to Canvas",
+        groupCategory,
+        groups: canvasGroups
+      });
+    } catch (error) {
+      console.error('Error publishing groups to Canvas:', error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to publish groups to Canvas"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

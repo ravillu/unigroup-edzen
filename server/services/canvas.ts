@@ -8,6 +8,18 @@ interface AssignmentOptions {
   published?: boolean;
 }
 
+interface GroupSetOptions {
+  name: string;
+  description?: string;
+  group_limit?: number;
+}
+
+interface GroupOptions {
+  name: string;
+  description?: string;
+  users?: number[];
+}
+
 class CanvasService {
   private apiToken: string;
   private baseUrl: string;
@@ -33,15 +45,19 @@ class CanvasService {
     this.baseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
   }
 
-  private async request(endpoint: string) {
+  private async request(endpoint: string, method: 'GET' | 'POST' | 'PUT' = 'GET', data?: any) {
     try {
       const url = `${this.baseUrl}/api/v1/${endpoint}`;
-      console.log('Making Canvas API request to:', url);
+      console.log(`Making Canvas API ${method} request to:`, url);
 
-      const response = await axios.get(url, {
+      const response = await axios({
+        method,
+        url,
+        data,
         headers: {
           'Authorization': `Bearer ${this.apiToken}`,
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         }
       });
 
@@ -71,62 +87,56 @@ class CanvasService {
   }
 
   async getCourses() {
-    try {
-      // Fetch all available courses where the user is a teacher
-      const courses = await this.request(
-        'courses?enrollment_type=teacher&include[]=total_students&per_page=100'
-      );
-
-      if (!Array.isArray(courses)) {
-        throw new Error("Unexpected response format from Canvas API");
-      }
-
-      return courses;
-    } catch (error) {
-      console.error('Failed to fetch courses:', error);
-      throw error;
-    }
+    return await this.request('courses?enrollment_type=teacher&include[]=total_students&per_page=100');
   }
 
   async getCourseStudents(courseId: number) {
-    try {
-      const students = await this.request(
-        `courses/${courseId}/users?enrollment_type[]=student&per_page=100&include[]=email&include[]=enrollments`
-      );
-      return students;
-    } catch (error) {
-      console.error(`Failed to fetch students for course ${courseId}:`, error);
-      throw error;
-    }
+    return await this.request(
+      `courses/${courseId}/users?enrollment_type[]=student&per_page=100&include[]=email&include[]=enrollments`
+    );
   }
 
   async createAssignment(courseId: number, options: AssignmentOptions) {
-    try {
-      const response = await axios.post(
-        `${this.baseUrl}/api/v1/courses/${courseId}/assignments`,
-        {
-          assignment: {
-            name: options.name,
-            description: options.description,
-            submission_types: options.submission_types,
-            published: options.published
-          }
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiToken}`,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error(`Failed to create assignment in course ${courseId}:`, error);
-      throw new Error(
-        `Failed to create Canvas assignment: ${error.response?.data?.message || error.message}`
-      );
+    return await this.request(
+      `courses/${courseId}/assignments`,
+      'POST',
+      { assignment: options }
+    );
+  }
+
+  // New methods for group management
+  async createGroupCategory(courseId: number, options: GroupSetOptions) {
+    return await this.request(
+      `courses/${courseId}/group_categories`,
+      'POST',
+      { name: options.name, group_limit: options.group_limit }
+    );
+  }
+
+  async createGroup(groupCategoryId: number, options: GroupOptions) {
+    const group = await this.request(
+      `group_categories/${groupCategoryId}/groups`,
+      'POST',
+      { name: options.name, description: options.description }
+    );
+
+    if (options.users && options.users.length > 0) {
+      await this.addUsersToGroup(group.id, options.users);
     }
+
+    return group;
+  }
+
+  async addUsersToGroup(groupId: number, userIds: number[]) {
+    const promises = userIds.map(userId =>
+      this.request(
+        `groups/${groupId}/memberships`,
+        'POST',
+        { user_id: userId }
+      )
+    );
+
+    return await Promise.all(promises);
   }
 }
 
