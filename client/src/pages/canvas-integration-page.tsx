@@ -22,18 +22,14 @@ export default function CanvasIntegrationPage() {
     },
     onSuccess: (data) => {
       // Update the user data in cache
-      queryClient.setQueryData(["/api/user"], (oldData: any) => ({
-        ...oldData,
-        canvasSetupSkipped: true
-      }));
+      queryClient.setQueryData(["/api/user"], data);
 
-      // Show success message
       toast({
         title: "Canvas Integration Skipped",
         description: "You can set this up later from your dashboard settings.",
       });
 
-      // Use window.location.replace to force a clean redirect
+      // Force a hard redirect to the dashboard
       window.location.replace("/");
     },
     onError: (error: Error) => {
