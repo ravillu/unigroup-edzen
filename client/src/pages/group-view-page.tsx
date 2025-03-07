@@ -179,7 +179,17 @@ export default function GroupViewPage() {
       }
     });
 
-    return Object.values(skillData);
+    // Sort skills by priority, then alphabetically
+    return Object.entries(skillData)
+      .sort(([skillA, _], [skillB, __]) => {
+        const priorityA = skillPriorities[skillA] || 1;
+        const priorityB = skillPriorities[skillB] || 1;
+        if (priorityA === priorityB) {
+          return skillA.localeCompare(skillB);
+        }
+        return priorityB - priorityA;
+      })
+      .map(([_, data]) => data);
   };
 
   // Show loading state while initial data is being fetched
@@ -214,6 +224,17 @@ export default function GroupViewPage() {
       </div>
     );
   }
+
+  const mutedColors = [
+    'rgb(102, 123, 144)',
+    'rgb(140, 162, 173)',
+    'rgb(178, 200, 201)',
+    'rgb(216, 238, 229)',
+    'rgb(97, 116, 134)',
+    'rgb(133, 154, 164)',
+    'rgb(169, 190, 192)',
+    'rgb(205, 226, 219)'
+  ];
 
   return (
     <div className="space-y-8">
@@ -457,16 +478,33 @@ export default function GroupViewPage() {
             <div className="h-[400px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={formatGroupSkills(groups)} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis domain={[0, 5]} />
-                  <Tooltip />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgb(228, 228, 231)" />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fill: 'rgb(113, 113, 122)' }}
+                    tickLine={{ stroke: 'rgb(113, 113, 122)' }}
+                  />
+                  <YAxis 
+                    domain={[0, 5]} 
+                    tick={{ fill: 'rgb(113, 113, 122)' }}
+                    tickLine={{ stroke: 'rgb(113, 113, 122)' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgb(250, 250, 250)',
+                      border: '1px solid rgb(228, 228, 231)'
+                    }}
+                  />
+                  <Legend 
+                    wrapperStyle={{
+                      color: 'rgb(113, 113, 122)'
+                    }}
+                  />
                   {groups.map((_, index) => (
                     <Bar
                       key={index}
                       dataKey={`Group ${index + 1}`}
-                      fill={`hsl(${index * (360 / groups.length)}, 70%, 50%)`}
+                      fill={mutedColors[index % mutedColors.length]}
                     />
                   ))}
                 </BarChart>
