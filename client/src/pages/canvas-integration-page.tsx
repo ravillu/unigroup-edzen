@@ -13,7 +13,12 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const canvasSetupSchema = z.object({
-  canvasInstanceUrl: z.string().url("Please enter a valid Canvas URL"),
+  canvasInstanceUrl: z.string()
+    .url("Please enter a valid Canvas URL")
+    .refine(url => {
+      // Basic validation for Canvas URL format
+      return url.includes('instructure.com') || url.includes('canvas');
+    }, "URL must be a valid Canvas instance URL (e.g., 'canvas.instructure.com' or 'your-institution.instructure.com')"),
   canvasToken: z.string().min(1, "API token is required")
 });
 
@@ -32,7 +37,18 @@ export default function CanvasIntegrationPage() {
 
   const canvasSetupMutation = useMutation({
     mutationFn: async (data: CanvasSetupData) => {
-      const res = await apiRequest("PATCH", "/api/user/canvas", data);
+      // Format the Canvas URL
+      let canvasUrl = data.canvasInstanceUrl;
+      if (!canvasUrl.startsWith('http://') && !canvasUrl.startsWith('https://')) {
+        canvasUrl = `https://${canvasUrl}`;
+      }
+      canvasUrl = canvasUrl.endsWith('/') ? canvasUrl.slice(0, -1) : canvasUrl;
+
+      const res = await apiRequest("PATCH", "/api/user/canvas", {
+        ...data,
+        canvasInstanceUrl: canvasUrl
+      });
+
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "Failed to update Canvas settings");
@@ -122,7 +138,7 @@ export default function CanvasIntegrationPage() {
                           <FormControl>
                             <Input 
                               {...field} 
-                              placeholder="https://your-institution.instructure.com"
+                              placeholder="canvas.instructure.com"
                               disabled={canvasSetupMutation.isPending}
                             />
                           </FormControl>

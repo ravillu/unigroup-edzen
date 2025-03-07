@@ -41,8 +41,27 @@ class CanvasService {
       );
     }
 
-    // Clean up the base URL
-    this.baseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
+    // Clean up and validate the base URL
+    this.baseUrl = this.formatCanvasUrl(this.baseUrl);
+  }
+
+  private formatCanvasUrl(url: string): string {
+    // Add https:// if not present
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `https://${url}`;
+    }
+
+    // Remove trailing slash
+    url = url.endsWith('/') ? url.slice(0, -1) : url;
+
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch (error) {
+      throw new Error("Invalid Canvas URL format. Please enter a valid URL.");
+    }
+
+    return url;
   }
 
   private async request(endpoint: string, method: 'GET' | 'POST' | 'PUT' = 'GET', data?: any) {
@@ -104,7 +123,7 @@ class CanvasService {
     );
   }
 
-  // New methods for group management
+  // Group management methods
   async createGroupCategory(courseId: number, options: GroupSetOptions) {
     return await this.request(
       `courses/${courseId}/group_categories`,
