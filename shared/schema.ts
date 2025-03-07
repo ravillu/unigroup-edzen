@@ -13,7 +13,7 @@ export const institutions = pgTable("institutions", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Users table with optional institution and canvas setup flag
+// Users table with optional institution
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   institutionId: integer("institution_id").references(() => institutions.id),
@@ -22,8 +22,7 @@ export const users = pgTable("users", {
   isProfessor: boolean("is_professor").notNull().default(true),
   canvasId: integer("canvas_id"),
   canvasToken: text("canvas_token"),
-  canvasInstanceUrl: text("canvas_instance_url"),
-  canvasSetupSkipped: boolean("canvas_setup_skipped").default(false),
+  canvasInstanceUrl: text("canvas_instance_url"), // Added for individual professor setup
   email: text("email").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

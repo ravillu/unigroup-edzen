@@ -16,7 +16,6 @@ type AuthContextType = {
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
-  resetPasswordMutation: UseMutationResult<void, Error, { email: string }>;
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
@@ -47,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onError: (error: Error) => {
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -65,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onError: (error: Error) => {
       toast({
         title: "Registration failed",
-        description: error.message || "Username may already be taken. Please try another.",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -76,33 +75,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.setQueryData(["/api/user"], null);
       setLocation("/auth");
     },
     onError: (error: Error) => {
       toast({
         title: "Logout failed",
-        description: "Please try again. If the problem persists, try clearing your browser cache.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const resetPasswordMutation = useMutation({
-    mutationFn: async ({ email }: { email: string }) => {
-      await apiRequest("POST", "/api/reset-password", { email });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Password reset email sent",
-        description: "Please check your email for instructions to reset your password.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Password reset failed",
-        description: "Please check your email address and try again.",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -117,7 +96,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
-        resetPasswordMutation,
       }}
     >
       {children}

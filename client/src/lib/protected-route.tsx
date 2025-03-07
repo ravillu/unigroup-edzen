@@ -23,7 +23,6 @@ export function ProtectedRoute({
     );
   }
 
-  // Redirect to auth if not logged in
   if (!user) {
     return (
       <Route path={path}>
@@ -32,20 +31,17 @@ export function ProtectedRoute({
     );
   }
 
-  // If user is on Canvas setup page
-  if (path === "/canvas") {
-    // If user already has Canvas token or has skipped setup, redirect to home
-    if (user.canvasToken || user.canvasSetupSkipped) {
-      return (
-        <Route path={path}>
-          <Redirect to="/" />
-        </Route>
-      );
-    }
+  // If user already has Canvas token and tries to access Canvas setup, redirect to home
+  if (path === "/canvas" && user.canvasToken) {
+    return (
+      <Route path={path}>
+        <Redirect to="/" />
+      </Route>
+    );
   }
 
-  // For protected routes that require Canvas setup
-  if (requireCanvasSetup && !user.canvasToken && !user.canvasSetupSkipped && path !== "/canvas") {
+  // Redirect to Canvas setup if required and user doesn't have Canvas token
+  if (requireCanvasSetup && !user.canvasToken && path !== "/canvas") {
     return (
       <Route path={path}>
         <Redirect to="/canvas" />
@@ -53,5 +49,5 @@ export function ProtectedRoute({
     );
   }
 
-  return <Route path={path} component={Component} />;
+  return <Component />
 }

@@ -27,17 +27,16 @@ interface CanvasCourse {
   total_students: number;
 }
 
+interface CanvasStudent {
+  id: number;
+  name: string;
+  email: string;
+  sortable_name: string;
+  short_name: string;
+}
+
 const canvasConfigSchema = z.object({
-  canvasInstanceUrl: z.string()
-    .min(1, "Canvas URL is required")
-    .transform(url => {
-      // Normalize the URL to ensure correct format
-      url = url.trim().toLowerCase();
-      if (url.includes('northeastern.instructure.com')) {
-        return 'northeastern.instructure.com';
-      }
-      return url;
-    }),
+  canvasInstanceUrl: z.string().url("Please enter a valid Canvas URL"),
   canvasToken: z.string().min(1, "API token is required"),
 });
 
@@ -52,38 +51,7 @@ export default function CanvasIntegrationPage() {
 
   const form = useForm<CanvasConfigForm>({
     resolver: zodResolver(canvasConfigSchema),
-    defaultValues: {
-      canvasInstanceUrl: 'northeastern.instructure.com',
-      canvasToken: ''
-    }
   });
-
-  const skipCanvasSetup = async () => {
-    try {
-      // Update user's canvas setup skipped status
-      await apiRequest("PATCH", "/api/user/canvas", {
-        canvasSetupSkipped: true
-      });
-
-      // Force refresh the user data
-      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-
-      toast({
-        title: "Canvas Integration Skipped",
-        description: "You can set this up later from your dashboard settings.",
-      });
-
-      // Redirect to dashboard
-      setLocation("/");
-    } catch (error) {
-      console.error('Failed to skip Canvas setup:', error);
-      toast({
-        title: "Error",
-        description: "Failed to skip Canvas setup. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
 
   const updateCanvasCredentialsMutation = useMutation({
     mutationFn: async (values: CanvasConfigForm) => {
@@ -107,6 +75,7 @@ export default function CanvasIntegrationPage() {
     },
   });
 
+  // Fetch Canvas courses
   const { data: courses = [], isLoading: coursesLoading, error: coursesError } = useQuery<CanvasCourse[]>({
     queryKey: ["/api/canvas/courses"],
     enabled: !!user?.canvasToken,
@@ -123,7 +92,7 @@ export default function CanvasIntegrationPage() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/">
             <h1 className="text-2xl font-bold text-[#C41230] cursor-pointer">
-              UniGroup by EdZen AI
+              NU Group Formation
             </h1>
           </Link>
         </div>
@@ -182,7 +151,13 @@ export default function CanvasIntegrationPage() {
                   </p>
                   <Button
                     variant="outline"
-                    onClick={skipCanvasSetup}
+                    onClick={() => {
+                      toast({
+                        title: "Canvas Integration Skipped",
+                        description: "You can set this up later from your dashboard settings.",
+                      });
+                      setLocation("/");
+                    }}
                     className="w-full"
                   >
                     Skip for Now
@@ -352,7 +327,13 @@ export default function CanvasIntegrationPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={skipCanvasSetup}
+                        onClick={() => {
+                          toast({
+                            title: "Canvas Integration Skipped",
+                            description: "You can set this up later from your dashboard settings.",
+                          });
+                          setLocation("/");
+                        }}
                         className="flex-1"
                       >
                         Skip for Now
