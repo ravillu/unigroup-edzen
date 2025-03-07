@@ -13,54 +13,59 @@ class CanvasService {
   private baseUrl: string;
 
   constructor(user?: User) {
-    // Check user credentials first
-    if (user?.canvasToken && user?.canvasInstanceUrl) {
-      this.apiToken = user.canvasToken;
-      this.baseUrl = user.canvasInstanceUrl;
-    } 
-    // Fall back to environment variables
-    else if (process.env.CANVAS_API_TOKEN && process.env.CANVAS_INSTANCE_URL) {
-      this.apiToken = process.env.CANVAS_API_TOKEN;
-      this.baseUrl = process.env.CANVAS_INSTANCE_URL;
-    }
-    else {
+    if (!user?.canvasToken || !user?.canvasInstanceUrl) {
       throw new Error(
         "Canvas credentials not found. Please make sure you have entered your Canvas API token and instance URL."
       );
     }
 
-    // Clean up the base URL
-    this.baseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
+    this.apiToken = user.canvasToken;
 
-    // Log configuration for debugging
+    // Clean and format the base URL
+    this.baseUrl = user.canvasInstanceUrl.replace(/\/$/, ''); // Remove trailing slash
+    if (!this.baseUrl.startsWith('http')) {
+      this.baseUrl = `https://${this.baseUrl}`;
+    }
+
     console.log('Canvas Service Configuration:', {
       hasToken: !!this.apiToken,
-      baseUrl: this.baseUrl,
-      userProvided: !!(user?.canvasToken && user?.canvasInstanceUrl)
+      baseUrl: this.baseUrl
     });
   }
 
   private async request(endpoint: string) {
     try {
-      const url = `${this.baseUrl}/api/v1/${endpoint}`;
+      const url = `${this.baseUrl}/api/v1/${endpoint.replace(/^\//, '')}`;
       console.log('Making Canvas API request to:', url);
 
       const response = await axios.get(url, {
         headers: {
           'Authorization': `Bearer ${this.apiToken}`,
-          'Accept': 'application/json'
-        }
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        validateStatus: (status) => status < 500 // Don't throw on 4xx errors
       });
+
+      // Check if response is HTML (error page)
+      const contentType = response.headers['content-type'];
+      if (contentType && contentType.includes('text/html')) {
+        throw new Error('Invalid response from Canvas API. Please check your Canvas instance URL.');
+      }
+
+      // Handle 4xx errors
+      if (response.status >= 400) {
+        throw new Error(response.data.message || 'Canvas API request failed');
+      }
 
       return response.data;
     } catch (error: any) {
       console.error('Canvas API Error:', {
-        status: error.response?.status,
-        message: error.response?.data?.message || error.message,
+        message: error.message,
+        response: error.response?.data,
         endpoint,
       });
 
-      // Provide more helpful error messages based on status code
       if (error.response?.status === 401) {
         throw new Error(
           "Invalid Canvas API token. Please check your token and try again."
@@ -68,6 +73,10 @@ class CanvasService {
       } else if (error.response?.status === 404) {
         throw new Error(
           "Could not connect to Canvas. Please verify your Canvas instance URL."
+        );
+      } else if (error.message.includes('text/html')) {
+        throw new Error(
+          "Invalid Canvas instance URL. Please ensure you're using the correct Canvas domain."
         );
       } else {
         throw new Error(
@@ -79,7 +88,6 @@ class CanvasService {
 
   async getCourses() {
     try {
-      // Fetch all available courses where the user is a teacher
       const courses = await this.request(
         'courses?enrollment_type=teacher&include[]=total_students&per_page=100'
       );
@@ -109,8 +117,9 @@ class CanvasService {
 
   async createAssignment(courseId: number, options: AssignmentOptions) {
     try {
+      const url = `${this.baseUrl}/api/v1/courses/${courseId}/assignments`;
       const response = await axios.post(
-        `${this.baseUrl}/api/v1/courses/${courseId}/assignments`,
+        url,
         {
           assignment: {
             name: options.name,
