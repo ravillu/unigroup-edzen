@@ -41,7 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
-      setLocation("/"); // Existing users go straight to homepage
+      if (!user.canvasToken) {
+        setLocation("/canvas");
+      } else {
+        setLocation("/");
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -59,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
-      setLocation("/canvas"); // New users go to Canvas setup
+      setLocation("/canvas"); // New users always go to Canvas setup
     },
     onError: (error: Error) => {
       toast({
