@@ -68,8 +68,19 @@ export function setupAuth(app: Express) {
 
   passport.deserializeUser(async (id: number, done) => {
     try {
+      if (!id) {
+        console.error('Deserialization error: No user ID provided');
+        return done(null, false);
+      }
+
       const user = await storage.getUser(id);
-      console.log('Deserialized user:', { id, hasCanvasToken: !!user?.canvasToken });
+
+      if (!user) {
+        console.error('Deserialization error: User not found:', { id });
+        return done(null, false);
+      }
+
+      console.log('Deserialized user:', { id, hasCanvasToken: !!user.canvasToken });
       done(null, user);
     } catch (error) {
       console.error('Deserialization error:', error);
