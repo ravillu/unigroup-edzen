@@ -3,13 +3,57 @@ import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ChevronRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const canvasSetupSchema = z.object({
+  canvasInstanceUrl: z.string().url("Please enter a valid Canvas URL"),
+  canvasToken: z.string().min(1, "API token is required")
+});
+
+type CanvasSetupData = z.infer<typeof canvasSetupSchema>;
 
 export default function CanvasIntegrationPage() {
   const { toast } = useToast();
-  const [step, setStep] = useState(1);
+
+  const form = useForm<CanvasSetupData>({
+    resolver: zodResolver(canvasSetupSchema),
+    defaultValues: {
+      canvasInstanceUrl: "",
+      canvasToken: ""
+    }
+  });
+
+  const canvasSetupMutation = useMutation({
+    mutationFn: async (data: CanvasSetupData) => {
+      const res = await apiRequest("PATCH", "/api/user/canvas", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to update Canvas settings");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Canvas Integration Complete",
+        description: "Your Canvas integration has been set up successfully.",
+      });
+      window.location.replace("/");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Setup Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
 
   const skipCanvasMutation = useMutation({
     mutationFn: async () => {
@@ -23,8 +67,6 @@ export default function CanvasIntegrationPage() {
         title: "Canvas Integration Skipped",
         description: "You can set this up later from your dashboard settings.",
       });
-
-      // Use replace to prevent back navigation
       window.location.replace("/");
     },
     onError: (error: Error) => {
@@ -35,11 +77,6 @@ export default function CanvasIntegrationPage() {
       });
     }
   });
-
-  const handleCanvasSetup = () => {
-    // Use test Canvas instance
-    window.location.href = "/api/auth/canvas?institution_id=1";
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -73,14 +110,62 @@ export default function CanvasIntegrationPage() {
                   <li>Create assignments that appear in Canvas</li>
                   <li>Track student submissions directly</li>
                 </ul>
-                <Button
-                  onClick={handleCanvasSetup}
-                  className="w-full"
-                  disabled={skipCanvasMutation.isPending}
-                >
-                  Set Up Canvas Integration
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
+
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit((data) => canvasSetupMutation.mutate(data))} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="canvasInstanceUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Canvas Instance URL</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              placeholder="https://your-institution.instructure.com"
+                              disabled={canvasSetupMutation.isPending}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="canvasToken"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Canvas API Token</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              type="password"
+                              placeholder="Enter your Canvas API token"
+                              disabled={canvasSetupMutation.isPending}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={canvasSetupMutation.isPending}
+                    >
+                      {canvasSetupMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Setting up Canvas...
+                        </>
+                      ) : (
+                        "Set Up Canvas Integration"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
               </div>
 
               <div className="relative">
