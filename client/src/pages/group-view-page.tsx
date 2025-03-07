@@ -71,6 +71,12 @@ export default function GroupViewPage() {
         payload
       );
 
+      // Handle non-JSON responses
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Unexpected server response. Please try again later.");
+      }
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ message: 'Failed to generate groups' }));
         throw new Error(errorData.message || 'Failed to generate groups');
