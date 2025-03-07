@@ -14,7 +14,6 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { PageLayout } from "@/components/layout/page-layout";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface FormQuestion {
@@ -183,7 +182,6 @@ export default function GroupViewPage() {
     return Object.values(skillData);
   };
 
-
   // Show loading state while initial data is being fetched
   if (formLoading || studentsLoading || groupsLoading) {
     return (
@@ -218,267 +216,265 @@ export default function GroupViewPage() {
   }
 
   return (
-    <PageLayout>
-      <div className="space-y-8">
-        {/* Form header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">{form?.title}</h1>
-            {form?.description && (
-              <p className="text-muted-foreground mt-2">{form.description}</p>
+    <div className="space-y-8">
+      {/* Form header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">{form?.title}</h1>
+          {form?.description && (
+            <p className="text-muted-foreground mt-2">{form.description}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Group Configuration */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Group Configuration</CardTitle>
+          <CardDescription className="space-y-2">
+            <p>Advanced AI-driven group formation algorithm that:</p>
+            <ol className="list-decimal list-inside space-y-1 ml-2">
+              <li>Prioritizes students with key skills (rated 4-5)</li>
+              <li>Ensures balanced distribution across groups:
+                <ul className="list-disc list-inside ml-4 mt-1 text-sm">
+                  <li>Gender balance</li>
+                  <li>Ethnic diversity</li>
+                  <li>Academic year mix</li>
+                  <li>NUin status distribution</li>
+                </ul>
+              </li>
+              <li>Optimizes skill complementarity within groups</li>
+              <li>Uses intelligent constraint satisfaction</li>
+            </ol>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div>
+              <Label>Group Size</Label>
+              <div className="flex items-center gap-2 mt-1.5">
+                <Input
+                  type="number"
+                  value={groupSize}
+                  onChange={(e) => setGroupSize(parseInt(e.target.value))}
+                  min={3}
+                  max={8}
+                  className="max-w-[100px]"
+                />
+                <span className="text-sm text-muted-foreground">students per group</span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-lg">Skill Priorities</Label>
+              <p className="text-sm text-muted-foreground -mt-2">
+                Set the importance of each skill (1 = least important, 5 = most important)
+              </p>
+              {form?.questions.map((question: FormQuestion) => (
+                <div key={question.id} className="grid gap-2">
+                  <Label>{question.text}</Label>
+                  <RadioGroup
+                    defaultValue={String(skillPriorities[question.text] || 1)}
+                    onValueChange={(value) =>
+                      setSkillPriorities(prev => ({
+                        ...prev,
+                        [question.text]: parseInt(value)
+                      }))
+                    }
+                    className="flex items-center gap-4"
+                  >
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <div key={value} className="flex items-center space-x-2">
+                        <RadioGroupItem value={String(value)} id={`${question.id}-${value}`} />
+                        <Label htmlFor={`${question.id}-${value}`}>{value}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              ))}
+            </div>
+
+            <Button
+              onClick={() => generateGroupsMutation.mutate()}
+              disabled={generateGroupsMutation.isPending}
+              className="w-full sm:w-auto"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${generateGroupsMutation.isPending ? 'animate-spin' : ''}`} />
+              {generateGroupsMutation.isPending ? 'Generating Groups...' : 'Generate Groups'}
+            </Button>
+
+            {groups.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                <GripVertical className="inline-block mr-2 h-4 w-4" />
+                Tip: Drag and drop students between groups to make manual adjustments
+              </p>
             )}
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Group Configuration */}
-        <Card className="mb-8">
+      {/* Generated Groups */}
+      {groups.length > 0 && (
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="mt-8 space-y-8">
+            {groups.map((group) => {
+              const groupStudents = students.filter(student =>
+                group.studentIds.includes(student.id)
+              );
+              const stats = calculateGroupStats(groupStudents);
+
+              return (
+                <Card key={group.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>{group.name}</span>
+                      <Badge variant="outline">
+                        {groupStudents.length} members
+                      </Badge>
+                    </CardTitle>
+                    {stats && (
+                      <CardDescription>
+                        <div className="space-y-4 mt-4">
+                          <h4 className="font-medium">Demographics</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h5 className="text-sm font-medium mb-2">Gender Distribution</h5>
+                              {Object.entries(stats.genderBalance).map(([gender, count]) => (
+                                <div key={gender} className="flex justify-between text-sm">
+                                  <span>{gender}:</span>
+                                  <span>{count}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-medium mb-2">Ethnicity Distribution</h5>
+                              {Object.entries(stats.ethnicityCount).map(([ethnicity, count]) => (
+                                <div key={ethnicity} className="flex justify-between text-sm">
+                                  <span>{ethnicity}:</span>
+                                  <span>{count}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <Droppable droppableId={String(group.id)}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={cn(
+                            "rounded-md",
+                            snapshot.isDraggingOver && "bg-muted/50"
+                          )}
+                        >
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-4"></TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Demographics</TableHead>
+                                {form?.questions.map((q: FormQuestion) => (
+                                  <TableHead key={q.id}>{q.text}</TableHead>
+                                ))}
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {groupStudents.map((student, index) => (
+                                <Draggable
+                                  key={student.id}
+                                  draggableId={String(student.id)}
+                                  index={index}
+                                >
+                                  {(provided, snapshot) => (
+                                    <TableRow
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      className={cn(
+                                        snapshot.isDragging && "bg-muted border-2 border-primary"
+                                      )}
+                                    >
+                                      <TableCell>
+                                        <div
+                                          {...provided.dragHandleProps}
+                                          className="cursor-move hover:text-primary"
+                                        >
+                                          <GripVertical className="h-4 w-4" />
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="font-medium">
+                                        {student.name}
+                                        <div className="text-sm text-muted-foreground">
+                                          {student.major} • {student.academicYear}
+                                        </div>
+                                      </TableCell>
+                                      <TableCell>
+                                        {student.gender} • {student.ethnicity}
+                                        <div className="text-sm text-muted-foreground">
+                                          {student.nunStatus}
+                                        </div>
+                                      </TableCell>
+                                      {form?.questions.map((q: FormQuestion) => (
+                                        <TableCell key={q.id} className="font-mono">
+                                          <Badge
+                                            variant={student.skills[q.text] >= 4 ? "default" : "secondary"}
+                                            className="w-8 h-8 rounded-full"
+                                          >
+                                            {student.skills[q.text]}
+                                          </Badge>
+                                        </TableCell>
+                                      ))}
+                                    </TableRow>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </Droppable>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </DragDropContext>
+      )}
+
+      {groups.length > 0 && (
+        <Card className="mt-8">
           <CardHeader>
-            <CardTitle>Group Configuration</CardTitle>
-            <CardDescription className="space-y-2">
-              <p>Advanced AI-driven group formation algorithm that:</p>
-              <ol className="list-decimal list-inside space-y-1 ml-2">
-                <li>Prioritizes students with key skills (rated 4-5)</li>
-                <li>Ensures balanced distribution across groups:
-                  <ul className="list-disc list-inside ml-4 mt-1 text-sm">
-                    <li>Gender balance</li>
-                    <li>Ethnic diversity</li>
-                    <li>Academic year mix</li>
-                    <li>NUin status distribution</li>
-                  </ul>
-                </li>
-                <li>Optimizes skill complementarity within groups</li>
-                <li>Uses intelligent constraint satisfaction</li>
-              </ol>
+            <CardTitle>Group Skill Comparison</CardTitle>
+            <CardDescription>
+              Average skill levels across all groups. Each bar represents a group's average score for each skill.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              <div>
-                <Label>Group Size</Label>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <Input
-                    type="number"
-                    value={groupSize}
-                    onChange={(e) => setGroupSize(parseInt(e.target.value))}
-                    min={3}
-                    max={8}
-                    className="max-w-[100px]"
-                  />
-                  <span className="text-sm text-muted-foreground">students per group</span>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label className="text-lg">Skill Priorities</Label>
-                <p className="text-sm text-muted-foreground -mt-2">
-                  Set the importance of each skill (1 = least important, 5 = most important)
-                </p>
-                {form?.questions.map((question: FormQuestion) => (
-                  <div key={question.id} className="grid gap-2">
-                    <Label>{question.text}</Label>
-                    <RadioGroup
-                      defaultValue={String(skillPriorities[question.text] || 1)}
-                      onValueChange={(value) =>
-                        setSkillPriorities(prev => ({
-                          ...prev,
-                          [question.text]: parseInt(value)
-                        }))
-                      }
-                      className="flex items-center gap-4"
-                    >
-                      {[1, 2, 3, 4, 5].map((value) => (
-                        <div key={value} className="flex items-center space-x-2">
-                          <RadioGroupItem value={String(value)} id={`${question.id}-${value}`} />
-                          <Label htmlFor={`${question.id}-${value}`}>{value}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                ))}
-              </div>
-
-              <Button
-                onClick={() => generateGroupsMutation.mutate()}
-                disabled={generateGroupsMutation.isPending}
-                className="w-full sm:w-auto"
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${generateGroupsMutation.isPending ? 'animate-spin' : ''}`} />
-                {generateGroupsMutation.isPending ? 'Generating Groups...' : 'Generate Groups'}
-              </Button>
-
-              {groups.length > 0 && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  <GripVertical className="inline-block mr-2 h-4 w-4" />
-                  Tip: Drag and drop students between groups to make manual adjustments
-                </p>
-              )}
+            <div className="h-[400px] mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={formatGroupSkills(groups)} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 5]} />
+                  <Tooltip />
+                  <Legend />
+                  {groups.map((_, index) => (
+                    <Bar
+                      key={index}
+                      dataKey={`Group ${index + 1}`}
+                      fill={`hsl(${index * (360 / groups.length)}, 70%, 50%)`}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
-
-        {/* Generated Groups */}
-        {groups.length > 0 && (
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="mt-8 space-y-8">
-              {groups.map((group) => {
-                const groupStudents = students.filter(student =>
-                  group.studentIds.includes(student.id)
-                );
-                const stats = calculateGroupStats(groupStudents);
-
-                return (
-                  <Card key={group.id}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span>{group.name}</span>
-                        <Badge variant="outline">
-                          {groupStudents.length} members
-                        </Badge>
-                      </CardTitle>
-                      {stats && (
-                        <CardDescription>
-                          <div className="space-y-4 mt-4">
-                            <h4 className="font-medium">Demographics</h4>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <h5 className="text-sm font-medium mb-2">Gender Distribution</h5>
-                                {Object.entries(stats.genderBalance).map(([gender, count]) => (
-                                  <div key={gender} className="flex justify-between text-sm">
-                                    <span>{gender}:</span>
-                                    <span>{count}</span>
-                                  </div>
-                                ))}
-                              </div>
-                              <div>
-                                <h5 className="text-sm font-medium mb-2">Ethnicity Distribution</h5>
-                                {Object.entries(stats.ethnicityCount).map(([ethnicity, count]) => (
-                                  <div key={ethnicity} className="flex justify-between text-sm">
-                                    <span>{ethnicity}:</span>
-                                    <span>{count}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <Droppable droppableId={String(group.id)}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className={cn(
-                              "rounded-md",
-                              snapshot.isDraggingOver && "bg-muted/50"
-                            )}
-                          >
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-4"></TableHead>
-                                  <TableHead>Name</TableHead>
-                                  <TableHead>Demographics</TableHead>
-                                  {form?.questions.map((q: FormQuestion) => (
-                                    <TableHead key={q.id}>{q.text}</TableHead>
-                                  ))}
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {groupStudents.map((student, index) => (
-                                  <Draggable
-                                    key={student.id}
-                                    draggableId={String(student.id)}
-                                    index={index}
-                                  >
-                                    {(provided, snapshot) => (
-                                      <TableRow
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        className={cn(
-                                          snapshot.isDragging && "bg-muted border-2 border-primary"
-                                        )}
-                                      >
-                                        <TableCell>
-                                          <div
-                                            {...provided.dragHandleProps}
-                                            className="cursor-move hover:text-primary"
-                                          >
-                                            <GripVertical className="h-4 w-4" />
-                                          </div>
-                                        </TableCell>
-                                        <TableCell className="font-medium">
-                                          {student.name}
-                                          <div className="text-sm text-muted-foreground">
-                                            {student.major} • {student.academicYear}
-                                          </div>
-                                        </TableCell>
-                                        <TableCell>
-                                          {student.gender} • {student.ethnicity}
-                                          <div className="text-sm text-muted-foreground">
-                                            {student.nunStatus}
-                                          </div>
-                                        </TableCell>
-                                        {form?.questions.map((q: FormQuestion) => (
-                                          <TableCell key={q.id} className="font-mono">
-                                            <Badge
-                                              variant={student.skills[q.text] >= 4 ? "default" : "secondary"}
-                                              className="w-8 h-8 rounded-full"
-                                            >
-                                              {student.skills[q.text]}
-                                            </Badge>
-                                          </TableCell>
-                                        ))}
-                                      </TableRow>
-                                    )}
-                                  </Draggable>
-                                ))}
-                                {provided.placeholder}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        )}
-                      </Droppable>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </DragDropContext>
-        )}
-
-        {groups.length > 0 && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle>Group Skill Comparison</CardTitle>
-              <CardDescription>
-                Average skill levels across all groups. Each bar represents a group's average score for each skill.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px] mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={formatGroupSkills(groups)} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis domain={[0, 5]} />
-                    <Tooltip />
-                    <Legend />
-                    {groups.map((_, index) => (
-                      <Bar
-                        key={index}
-                        dataKey={`Group ${index + 1}`}
-                        fill={`hsl(${index * (360 / groups.length)}, 70%, 50%)`}
-                      />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </PageLayout>
+      )}
+    </div>
   );
 }
