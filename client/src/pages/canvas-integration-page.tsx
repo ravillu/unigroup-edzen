@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function CanvasIntegrationPage() {
   const { toast } = useToast();
@@ -15,22 +15,26 @@ export default function CanvasIntegrationPage() {
     mutationFn: async () => {
       const res = await apiRequest("PATCH", "/api/user/skip-canvas");
       if (!res.ok) {
-        throw new Error("Failed to skip Canvas integration");
+        const error = await res.json().catch(() => ({ message: "Failed to skip Canvas integration" }));
+        throw new Error(error.message || "Failed to skip Canvas integration");
       }
-      const data = await res.json();
-      return data;
+      return res.json();
     },
     onSuccess: (data) => {
+      // Update the user data in cache
+      queryClient.setQueryData(["/api/user"], (oldData: any) => ({
+        ...oldData,
+        canvasSetupSkipped: true
+      }));
+
       // Show success message
       toast({
         title: "Canvas Integration Skipped",
         description: "You can set this up later from your dashboard settings.",
       });
 
-      // Delay redirect slightly to ensure state is updated
-      setTimeout(() => {
-        window.location.replace("/");
-      }, 100);
+      // Use window.location.replace to force a clean redirect
+      window.location.replace("/");
     },
     onError: (error: Error) => {
       toast({

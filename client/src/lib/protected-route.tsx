@@ -31,14 +31,17 @@ export function ProtectedRoute({
     );
   }
 
-  // If user has Canvas setup skipped, treat it as having Canvas integrated
-  const hasCanvasSetup = user.canvasToken || user.canvasSetupSkipped;
+  // If we're on the canvas page and either have token or skipped setup, redirect to home
+  if (path === "/canvas" && (user.canvasToken || user.canvasSetupSkipped)) {
+    return (
+      <Route path={path}>
+        <Redirect to="/" />
+      </Route>
+    );
+  }
 
-  // Only redirect to Canvas setup if:
-  // 1. The route requires Canvas setup
-  // 2. User doesn't have Canvas token AND hasn't skipped setup
-  // 3. Not already on the Canvas setup page
-  if (requireCanvasSetup && !hasCanvasSetup && path !== "/canvas") {
+  // If we require Canvas setup and don't have it set up or skipped, redirect to canvas page
+  if (requireCanvasSetup && !user.canvasToken && !user.canvasSetupSkipped && path !== "/canvas") {
     return (
       <Route path={path}>
         <Redirect to="/canvas" />

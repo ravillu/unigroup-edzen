@@ -244,8 +244,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Update user to mark Canvas setup as skipped
       const updatedUser = await storage.updateUser(req.user.id, {
-        canvasSetupSkipped: true
+        canvasSetupSkipped: true,
+        updatedAt: new Date()
       });
+
+      // Update the session user data
+      req.user.canvasSetupSkipped = true;
 
       res.json(updatedUser);
     } catch (error) {
