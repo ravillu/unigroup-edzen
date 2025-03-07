@@ -39,9 +39,10 @@ export default function CanvasIntegrationPage() {
   });
 
   const handleCanvasSetup = () => {
-    // For now, hardcode Northeastern as the institution ID
-    const institutionId = 1;  // Northeastern University's ID
-    window.location.href = `/api/auth/canvas?institution_id=${institutionId}`;
+    // Use canvas.instructure.com for test accounts
+    const institution_id = 1;  // Test institution ID
+    const redirectUrl = `/api/auth/canvas?institution_id=${institution_id}&canvas_url=canvas.instructure.com`;
+    window.location.href = redirectUrl;
   };
 
   return (

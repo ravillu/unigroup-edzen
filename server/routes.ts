@@ -55,16 +55,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Canvas OAuth routes
   app.get("/api/auth/canvas", async (req, res) => {
     try {
-      if (!req.query.institution_id) {
+      const { institution_id, canvas_url } = req.query;
+
+      if (!institution_id) {
         return res.status(400).json({ message: "Institution ID is required" });
       }
 
-      const institutionId = parseInt(req.query.institution_id as string);
-      const institution = await storage.getInstitution(institutionId);
-
-      if (!institution) {
-        return res.status(404).json({ message: "Institution not found" });
-      }
+      const institutionId = parseInt(institution_id as string);
+      const institution = {
+        id: institutionId,
+        name: "Test Institution", // This should ideally be fetched from the database
+        canvasInstanceUrl: canvas_url as string || "canvas.instructure.com"
+      };
 
       const authService = createCanvasAuthService(institution);
       const authUrl = authService.getAuthorizationUrl(institutionId.toString());
