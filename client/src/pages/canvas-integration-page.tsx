@@ -86,13 +86,41 @@ export default function CanvasIntegrationPage() {
     updateCanvasCredentialsMutation.mutate(data);
   });
 
+  const handleSkip = async () => {
+    try {
+      // Skip Canvas integration
+      const res = await apiRequest("PATCH", "/api/user/skip-canvas", {});
+      if (!res.ok) {
+        throw new Error("Failed to skip Canvas integration");
+      }
+
+      // Invalidate user query to refresh the state
+      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+
+      toast({
+        title: "Canvas Integration Skipped",
+        description: "You can set this up later from your dashboard settings.",
+      });
+
+      // Redirect to dashboard
+      setLocation("/");
+
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to skip Canvas integration. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b fixed top-0 left-0 right-0 bg-background z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/">
             <h1 className="text-2xl font-bold text-[#C41230] cursor-pointer">
-              NU Group Formation
+              UniGroup
             </h1>
           </Link>
         </div>
@@ -151,13 +179,7 @@ export default function CanvasIntegrationPage() {
                   </p>
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      toast({
-                        title: "Canvas Integration Skipped",
-                        description: "You can set this up later from your dashboard settings.",
-                      });
-                      setLocation("/");
-                    }}
+                    onClick={handleSkip}
                     className="w-full"
                   >
                     Skip for Now
@@ -327,13 +349,7 @@ export default function CanvasIntegrationPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => {
-                          toast({
-                            title: "Canvas Integration Skipped",
-                            description: "You can set this up later from your dashboard settings.",
-                          });
-                          setLocation("/");
-                        }}
+                        onClick={handleSkip}
                         className="flex-1"
                       >
                         Skip for Now
