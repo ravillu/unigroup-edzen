@@ -1,17 +1,15 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ChevronRight } from "lucide-react";
-import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Link } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function CanvasIntegrationPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const [, setLocation] = useLocation();
 
   const skipCanvasMutation = useMutation({
     mutationFn: async () => {
@@ -19,19 +17,10 @@ export default function CanvasIntegrationPage() {
       if (!res.ok) {
         throw new Error("Failed to skip Canvas integration");
       }
-      return res.json();
     },
     onSuccess: () => {
-      // Update user data in cache to reflect skipped state
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-
-      toast({
-        title: "Canvas Integration Skipped",
-        description: "You can set this up later from your dashboard settings.",
-      });
-
-      // Use setLocation for client-side routing
-      setLocation("/");
+      // Force a hard redirect to dashboard
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({
