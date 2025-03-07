@@ -82,13 +82,13 @@ const skillLevels = [
 
 const studentFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  nuid: z.string().min(1, "NUID is required"),
+  nuid: z.string().optional(),
   gender: z.string().min(1, "Gender is required"),
   academicYear: z.string().min(1, "Academic year is required"),
   ethnicity: z.string().min(1, "Ethnicity is required"),
   major: z.string().min(1, "Major is required"),
   isNuin: z.enum(["yes", "no"]),
-  nuinCampus: z.string().optional(),
+  nuinCampus: z.string().optional().nullable(),
   skills: z.record(z.number().min(0).max(5)),
 });
 
