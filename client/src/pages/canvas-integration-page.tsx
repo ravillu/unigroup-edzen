@@ -17,10 +17,20 @@ export default function CanvasIntegrationPage() {
       if (!res.ok) {
         throw new Error("Failed to skip Canvas integration");
       }
+      const data = await res.json();
+      return data;
     },
-    onSuccess: () => {
-      // Force a hard redirect to dashboard
-      window.location.href = "/";
+    onSuccess: (data) => {
+      // Show success message
+      toast({
+        title: "Canvas Integration Skipped",
+        description: "You can set this up later from your dashboard settings.",
+      });
+
+      // Delay redirect slightly to ensure state is updated
+      setTimeout(() => {
+        window.location.replace("/");
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
