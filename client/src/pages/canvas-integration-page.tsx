@@ -36,6 +36,11 @@ export default function CanvasIntegrationPage() {
     }
   });
 
+  const handleCanvasSetup = () => {
+    // Redirect to the Canvas OAuth flow
+    window.location.href = "/api/auth/canvas";
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b fixed top-0 left-0 right-0 bg-background z-50">
@@ -69,8 +74,9 @@ export default function CanvasIntegrationPage() {
                   <li>Track student submissions directly</li>
                 </ul>
                 <Button
-                  onClick={() => setStep(2)}
+                  onClick={handleCanvasSetup}
                   className="w-full"
+                  disabled={skipCanvasMutation.isPending}
                 >
                   Set Up Canvas Integration
                   <ChevronRight className="ml-2 h-4 w-4" />
