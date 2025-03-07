@@ -19,18 +19,18 @@ import {
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as framerMotion from "framer-motion";
-import { 
-  AtSign, 
-  Lock, 
-  User, 
-  EyeOff, 
-  Eye, 
+import {
+  AtSign,
+  Lock,
+  User,
+  EyeOff,
+  Eye,
   AlertCircle,
   CheckCircle2,
-  Github,
 } from "lucide-react";
-import { SiGoogle } from "react-icons/si";
+import { SiCanvas } from "react-icons/si";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = insertUserSchema.pick({
   username: true,
@@ -101,6 +101,7 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
+  const { toast } = useToast();
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -124,6 +125,30 @@ export default function AuthPage() {
     // TODO: Implement forgot password functionality
     console.log("Reset password for:", data.email);
   };
+
+  const handleCanvasLogin = () => {
+    // Redirect to Canvas OAuth flow
+    window.location.href = `/api/auth/canvas`;
+  };
+
+  useEffect(() => {
+    // Handle OAuth errors
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+
+    if (error) {
+      toast({
+        title: "Authentication Error",
+        description: error === 'canvas_auth_failed'
+          ? "Failed to authenticate with Canvas. Please try again."
+          : "Authentication failed. Please try again.",
+        variant: "destructive"
+      });
+
+      // Clear the error from URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [toast]);
 
   useEffect(() => {
     if (user) {
@@ -257,16 +282,14 @@ export default function AuthPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
-                            <Button variant="outline" className="w-full">
-                              <Github className="mr-2 h-4 w-4" />
-                              Github
-                            </Button>
-                            <Button variant="outline" className="w-full">
-                              <SiGoogle className="mr-2 h-4 w-4" />
-                              Google
-                            </Button>
-                          </div>
+                          <Button
+                            variant="outline"
+                            className="w-full bg-[#CF4520] hover:bg-[#B33D1C] text-white hover:text-white"
+                            onClick={handleCanvasLogin}
+                          >
+                            <SiCanvas className="mr-2 h-4 w-4" />
+                            Login with Northeastern Canvas
+                          </Button>
                         </div>
                       </form>
                     </Form>

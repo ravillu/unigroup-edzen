@@ -55,19 +55,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Canvas OAuth routes
   app.get("/api/auth/canvas", async (req, res) => {
     try {
-      if (!req.query.institution_id) {
-        return res.status(400).json({ message: "Institution ID is required" });
-      }
-
-      const institutionId = parseInt(req.query.institution_id as string);
-      const institution = await storage.getInstitution(institutionId);
+      // For initial login flow, we'll use a default institution
+      // The actual institution will be set during the callback
+      const institution = await storage.getInstitutions()[0];
 
       if (!institution) {
-        return res.status(404).json({ message: "Institution not found" });
+        return res.status(404).json({ message: "No institution found" });
       }
 
       const authService = createCanvasAuthService(institution);
-      const authUrl = authService.getAuthorizationUrl(institutionId.toString());
+      const authUrl = authService.getAuthorizationUrl(institution.id.toString());
       res.redirect(authUrl);
     } catch (error) {
       console.error('Canvas auth error:', error);
@@ -97,19 +94,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user profile
       const profile = await authService.getUserProfile(tokenData.access_token);
 
-      // Store institution and token in session
-      req.session.canvasToken = tokenData.access_token;
-      req.session.institutionId = institutionId;
-
-      // Update or create user
+      // Check if user exists
       let user = await storage.getUserByUsername(profile.login_id);
+
       if (!user) {
+        // Create new user
         user = await storage.createUser({
           username: profile.login_id,
           email: profile.primary_email,
+          password: '', // Empty password for Canvas users
           institutionId,
           canvasId: profile.id,
-          canvasToken: tokenData.access_token
+          canvasToken: tokenData.access_token,
+          canvasInstanceUrl: institution.canvasInstanceUrl,
+          isProfessor: false, // Default to student, can be updated later
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      } else {
+        // Update existing user's Canvas token
+        user = await storage.updateUser(user.id, {
+          canvasToken: tokenData.access_token,
+          canvasInstanceUrl: institution.canvasInstanceUrl,
+          updatedAt: new Date()
         });
       }
 
