@@ -71,18 +71,17 @@ export default function GroupViewPage() {
         payload
       );
 
-      // Handle non-JSON responses
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Unexpected server response. Please try again later.");
-      }
+      // Always try to parse JSON response first
+      const data = await res.json().catch(() => ({ 
+        message: "Failed to parse server response" 
+      }));
 
+      // Check if the response is not ok
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: 'Failed to generate groups' }));
-        throw new Error(errorData.message || 'Failed to generate groups');
+        throw new Error(data.message || 'Failed to generate groups');
       }
 
-      return res.json();
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/forms/${formId}/groups`] });

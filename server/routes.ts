@@ -339,6 +339,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(group);
   });
 
+  // Add new group generation route with proper error handling
+  app.post("/api/forms/:formId/groups/generate", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+
+    try {
+      const formId = parseInt(req.params.formId);
+      const { groupSize, skillPriorities } = req.body;
+
+      // Input validation
+      if (!groupSize || typeof groupSize !== 'number' || groupSize < 2) {
+        return res.status(400).json({ message: "Invalid group size" });
+      }
+
+      if (!skillPriorities || typeof skillPriorities !== 'object') {
+        return res.status(400).json({ message: "Invalid skill priorities" });
+      }
+
+      // Get form and students
+      const form = await storage.getForm(formId);
+      if (!form) {
+        return res.status(404).json({ message: "Form not found" });
+      }
+
+      const students = await storage.getStudentsByForm(formId);
+      if (!students.length) {
+        return res.status(400).json({ message: "No students available for group generation" });
+      }
+
+      // Generate groups
+      const groups = await storage.generateGroups(formId, students, groupSize, skillPriorities);
+
+      // Send JSON response
+      res.setHeader('Content-Type', 'application/json');
+      res.json(groups);
+    } catch (error) {
+      console.error('Error generating groups:', error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to generate groups"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
