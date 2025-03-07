@@ -37,14 +37,16 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+let server: any = null;
+
+async function startServer() {
   try {
     // Initialize database first
     log("Initializing database connection...");
     await initializeDatabase();
     log("Database connection established successfully");
 
-    const server = await registerRoutes(app);
+    server = await registerRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
@@ -62,16 +64,61 @@ app.use((req, res, next) => {
     }
 
     // Start server
-    const port = 5000;
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`serving on port ${port}`);
+    const port = process.env.PORT || 5000;
+
+    await new Promise((resolve, reject) => {
+      server.listen({
+        port,
+        host: "0.0.0.0",
+        reusePort: true,
+      }, (err?: Error) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        log(`Server started on port ${port}`);
+        resolve(true);
+      });
     });
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
+
+  } catch (error: any) {
+    if (error.code === 'EADDRINUSE') {
+      log(`Error: Port ${process.env.PORT || 5000} is already in use`);
+      log('Please ensure no other instances of the application are running');
+      process.exit(1);
+    } else {
+      console.error("Failed to start server:", error);
+      process.exit(1);
+    }
   }
-})();
+}
+
+// Graceful shutdown handling
+function shutdown() {
+  if (server) {
+    log('Shutting down server...');
+    server.close(() => {
+      log('Server closed');
+      process.exit(0);
+    });
+
+    // Force close after timeout
+    setTimeout(() => {
+      log('Could not close connections in time, forcefully shutting down');
+      process.exit(1);
+    }, 10000);
+  } else {
+    process.exit(0);
+  }
+}
+
+// Handle various shutdown signals
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  shutdown();
+});
+
+// Start the server
+startServer();
