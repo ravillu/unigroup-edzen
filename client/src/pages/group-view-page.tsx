@@ -226,14 +226,10 @@ export default function GroupViewPage() {
   }
 
   const mutedColors = [
-    'rgb(102, 123, 144)',
-    'rgb(140, 162, 173)',
-    'rgb(178, 200, 201)',
-    'rgb(216, 238, 229)',
-    'rgb(97, 116, 134)',
-    'rgb(133, 154, 164)',
-    'rgb(169, 190, 192)',
-    'rgb(205, 226, 219)'
+    'rgb(102, 123, 144)',  // Dark blue-gray
+    'rgb(140, 162, 173)',  // Medium blue-gray
+    'rgb(178, 200, 201)',  // Light blue-gray
+    'rgb(152, 175, 180)',  // Adjusted color for Group 4 - more visible
   ];
 
   return (
