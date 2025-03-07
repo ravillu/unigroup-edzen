@@ -3,12 +3,30 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertFormSchema, insertStudentSchema, insertGroupSchema, insertInstitutionSchema } from "@shared/schema";
-import { canvasService, createCanvasService } from "./services/canvas"; // Updated import
-import { createCanvasAuthService } from "./services/canvas-auth";
-import { createLTIService } from "./services/lti";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  app.get("/api/init", async (req, res) => {
+    try {
+      const institutions = await storage.getAllInstitutions();
+      if (institutions.length === 0) {
+        await storage.createInstitution({
+          name: "Northeastern University",
+          canvasInstanceUrl: process.env.CANVAS_INSTANCE_URL || "https://northeastern.instructure.com",
+          canvasClientId: "your_client_id",
+          canvasClientSecret: "your_client_secret",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        console.log('Created initial Northeastern institution');
+      }
+      res.json({ message: "Initialization complete" });
+    } catch (error) {
+      console.error('Initialization error:', error);
+      res.status(500).json({ message: "Failed to initialize" });
+    }
+  });
 
   // Institution Management Routes
   app.post("/api/institutions", async (req, res) => {
@@ -50,225 +68,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Failed to fetch institution:', error);
       res.status(500).json({ message: "Failed to fetch institution" });
     }
-  });
-
-  // Canvas OAuth routes
-  app.get("/api/auth/canvas", async (req, res) => {
-    try {
-      // For initial login flow, get all institutions and use the first one
-      const [institution] = await storage.getAllInstitutions();
-
-      if (!institution) {
-        console.error('No institution found for Canvas auth');
-        return res.redirect('/auth?error=no_institution');
-      }
-
-      console.log('Initiating Canvas OAuth flow:', { institutionId: institution.id });
-      const authService = createCanvasAuthService(institution);
-      const authUrl = authService.getAuthorizationUrl(institution.id.toString());
-      res.redirect(authUrl);
-    } catch (error) {
-      console.error('Canvas auth error:', error);
-      res.redirect('/auth?error=canvas_auth_failed');
-    }
-  });
-
-  app.get("/api/auth/canvas/callback", async (req, res) => {
-    try {
-      const { code, state } = req.query;
-      if (!code || typeof code !== 'string' || !state) {
-        throw new Error('Invalid authorization code or state');
-      }
-
-      const institutionId = parseInt(state as string);
-      const institution = await storage.getInstitution(institutionId);
-
-      if (!institution) {
-        throw new Error('Institution not found');
-      }
-
-      const authService = createCanvasAuthService(institution);
-
-      // Exchange code for token
-      const tokenData = await authService.getTokenFromCode(code);
-
-      // Get user profile
-      const profile = await authService.getUserProfile(tokenData.access_token);
-
-      // Check if user exists
-      let user = await storage.getUserByUsername(profile.login_id);
-
-      if (!user) {
-        // Create new user
-        user = await storage.createUser({
-          username: profile.login_id,
-          email: profile.primary_email,
-          password: '', // Empty password for Canvas users
-          institutionId,
-          canvasId: profile.id,
-          canvasToken: tokenData.access_token,
-          canvasInstanceUrl: institution.canvasInstanceUrl,
-          isProfessor: false, // Default to student, can be updated later
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
-      } else {
-        // Update existing user's Canvas token
-        user = await storage.updateUser(user.id, {
-          canvasToken: tokenData.access_token,
-          canvasInstanceUrl: institution.canvasInstanceUrl,
-          updatedAt: new Date()
-        });
-      }
-
-      // Log the user in
-      req.login(user, (err) => {
-        if (err) {
-          console.error('Login error:', err);
-          res.redirect('/auth?error=login_failed');
-          return;
-        }
-        console.log('Canvas OAuth successful, redirecting user:', { id: user.id, hasCanvasToken: !!user.canvasToken });
-        res.redirect('/');
-      });
-    } catch (error) {
-      console.error('Canvas OAuth error:', error);
-      res.redirect('/auth?error=canvas_auth_failed');
-    }
-  });
-
-  // LTI Configuration endpoint
-  app.get("/api/lti/config/:institutionId", async (req, res) => {
-    try {
-      const institutionId = parseInt(req.params.institutionId);
-      const institution = await storage.getInstitution(institutionId);
-
-      if (!institution) {
-        return res.status(404).json({ message: "Institution not found" });
-      }
-
-      const ltiService = createLTIService(institution);
-      res.json(ltiService.getLTIConfig());
-    } catch (error) {
-      console.error('LTI config error:', error);
-      res.status(500).json({ message: "Failed to generate LTI configuration" });
-    }
-  });
-
-  // Canvas API routes (updated to use user-specific Canvas service)
-  app.get("/api/canvas/courses", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const canvasService = createCanvasService(req.user);
-      const courses = await canvasService.getCourses();
-      res.json(courses);
-    } catch (error) {
-      console.error('Failed to fetch Canvas courses:', error);
-      res.status(500).json({ message: "Failed to fetch Canvas courses" });
-    }
-  });
-
-  app.get("/api/canvas/courses/:courseId/students", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const courseId = parseInt(req.params.courseId);
-      const canvasService = createCanvasService(req.user);
-      const students = await canvasService.getCourseStudents(courseId);
-      res.json(students);
-    } catch (error) {
-      console.error('Failed to fetch Canvas students:', error);
-      res.status(500).json({ message: "Failed to fetch Canvas students" });
-    }
-  });
-
-  // Add this route to handle Canvas assignment creation
-  app.post("/api/canvas/courses/:courseId/assignments", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const courseId = parseInt(req.params.courseId);
-      const { formId, name, description } = req.body;
-
-      // Get the submission URL
-      const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
-      const submissionUrl = `${baseUrl}/forms/${formId}/submit`;
-
-      // Create assignment in Canvas using user's credentials
-      const canvasService = createCanvasService(req.user);
-      const assignment = await canvasService.createAssignment(courseId, {
-        name,
-        description: `${description ? description + "\n\n" : ""}Welcome to ${name}!\n\nPlease fill the personal profile survey using the link below before the start of your class.\n\n<a href="${submissionUrl}" target="_blank">Click here to access the group formation survey</a>`,
-        submission_types: ["none"],
-        published: true
-      });
-
-      res.json(assignment);
-    } catch (error) {
-      console.error('Failed to create Canvas assignment:', error);
-      res.status(500).json({ message: "Failed to create Canvas assignment" });
-    }
-  });
-
-  // Update the user update route to properly handle session data
-  app.patch("/api/user/canvas", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const { canvasInstanceUrl, canvasToken, canvasSetupSkipped } = req.body;
-
-      // If skipping Canvas setup
-      if (canvasSetupSkipped) {
-        const updatedUser = await storage.updateUser(req.user.id, {
-          canvasSetupSkipped: true,
-          updatedAt: new Date()
-        });
-        return res.json(updatedUser);
-      }
-
-      // Test the Canvas credentials before saving
-      const testService = createCanvasService({
-        ...req.user,
-        canvasInstanceUrl,
-        canvasToken
-      });
-
-      // Try to fetch courses to verify credentials
-      await testService.getCourses();
-
-      // Update user with new Canvas credentials
-      const updatedUser = await storage.updateUser(req.user.id, {
-        canvasInstanceUrl,
-        canvasToken,
-        updatedAt: new Date()
-      });
-
-      // Update the user in the session
-      req.login(updatedUser, (err) => {
-        if (err) {
-          console.error('Login error:', err);
-          return res.status(500).json({ message: "Failed to update session" });
-        }
-        res.json(updatedUser);
-      });
-    } catch (error) {
-      console.error('Failed to update Canvas credentials:', error);
-      res.status(400).json({
-        message: error instanceof Error ? error.message : "Failed to update Canvas credentials"
-      });
-    }
-  });
-
-  // Update the logout route to properly clear session
-  app.post("/api/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Logout error:', err);
-        return res.status(500).json({ message: "Failed to logout" });
-      }
-      res.sendStatus(200);
-    });
   });
 
 

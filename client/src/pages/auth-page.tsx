@@ -28,7 +28,6 @@ import {
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
-import { SiCanvas } from "react-icons/si";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -124,11 +123,6 @@ export default function AuthPage() {
   const handleForgotPassword = async (data: ForgotPasswordData) => {
     // TODO: Implement forgot password functionality
     console.log("Reset password for:", data.email);
-  };
-
-  const handleCanvasLogin = () => {
-    // Redirect to Canvas OAuth flow
-    window.location.href = `/api/auth/canvas`;
   };
 
   useEffect(() => {
@@ -243,25 +237,6 @@ export default function AuthPage() {
                           )}
                         />
 
-                        <div className="flex justify-between items-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setMode("forgot")}
-                          >
-                            Forgot password?
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setMode("register")}
-                          >
-                            Create account
-                          </Button>
-                        </div>
-
                         <div className="space-y-4">
                           <Button
                             type="submit"
@@ -271,25 +246,24 @@ export default function AuthPage() {
                             {loginMutation.isPending ? "Signing in..." : "Sign in"}
                           </Button>
 
-                          <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                              <span className="w-full border-t" />
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                              <span className="bg-background px-2 text-muted-foreground">
-                                Or continue with
-                              </span>
-                            </div>
+                          <div className="flex justify-between items-center">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setMode("forgot")}
+                            >
+                              Forgot password?
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setMode("register")}
+                            >
+                              Create account
+                            </Button>
                           </div>
-
-                          <Button
-                            variant="outline"
-                            className="w-full bg-[#CF4520] hover:bg-[#B33D1C] text-white hover:text-white"
-                            onClick={handleCanvasLogin}
-                          >
-                            <SiCanvas className="mr-2 h-4 w-4" />
-                            Login with Northeastern Canvas
-                          </Button>
                         </div>
                       </form>
                     </Form>
