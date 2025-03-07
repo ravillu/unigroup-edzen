@@ -237,6 +237,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add this route handler in the appropriate section of routes.ts
+  app.patch("/api/user/skip-canvas", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      // Update user to mark Canvas setup as skipped
+      const updatedUser = await storage.updateUser(req.user.id, {
+        canvasSetupSkipped: true
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Failed to skip Canvas setup:', error);
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Failed to skip Canvas setup" 
+      });
+    }
+  });
+
 
   // Forms
   app.post("/api/forms", async (req, res) => {

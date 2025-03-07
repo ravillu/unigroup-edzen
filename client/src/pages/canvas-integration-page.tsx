@@ -11,15 +11,6 @@ import { z } from "zod";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
 
 interface CanvasCourse {
   id: number;
@@ -54,16 +45,21 @@ export default function CanvasIntegrationPage() {
 
   const skipCanvasMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("PATCH", "/api/user/skip-canvas", {});
-      if (!res.ok) throw new Error("Failed to skip Canvas integration");
-      return res.json();
+      const res = await apiRequest("PATCH", "/api/user/skip-canvas");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: "Failed to skip Canvas integration" }));
+        throw new Error(errorData.message || "Failed to skip Canvas integration");
+      }
+      return await res.json();
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+
       toast({
         title: "Canvas Integration Skipped",
         description: "You can set this up later from your dashboard settings.",
       });
+
       // Use window.location.href for a hard redirect
       window.location.href = "/";
     },
@@ -146,6 +142,7 @@ export default function CanvasIntegrationPage() {
                   <Button
                     onClick={() => setStep(2)}
                     className="w-full"
+                    disabled={skipCanvasMutation.isPending}
                   >
                     Set Up Canvas Integration
                     <ChevronRight className="ml-2 h-4 w-4" />
