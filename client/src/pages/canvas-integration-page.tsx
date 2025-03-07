@@ -45,7 +45,6 @@ type CanvasConfigForm = z.infer<typeof canvasConfigSchema>;
 export default function CanvasIntegrationPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [step, setStep] = useState(1);
   const { user } = useAuth();
 
@@ -60,15 +59,12 @@ export default function CanvasIntegrationPage() {
       return res.json();
     },
     onSuccess: async () => {
-      // Invalidate user query first
       await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-
       toast({
         title: "Canvas Integration Skipped",
         description: "You can set this up later from your dashboard settings.",
       });
-
-      // Force redirect to dashboard
+      // Use window.location.href for a hard redirect
       window.location.href = "/";
     },
     onError: (error: Error) => {
@@ -102,8 +98,7 @@ export default function CanvasIntegrationPage() {
     },
   });
 
-  // Fetch Canvas courses
-  const { data: courses = [], isLoading: coursesLoading, error: coursesError } = useQuery<CanvasCourse[]>({
+  const { data: courses = [], isLoading: coursesLoading } = useQuery<CanvasCourse[]>({
     queryKey: ["/api/canvas/courses"],
     enabled: !!user?.canvasToken,
     retry: 1,
@@ -112,10 +107,6 @@ export default function CanvasIntegrationPage() {
   const handleSubmit = form.handleSubmit((data) => {
     updateCanvasCredentialsMutation.mutate(data);
   });
-
-  const handleSkip = () => {
-    skipCanvasMutation.mutate();
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -153,9 +144,8 @@ export default function CanvasIntegrationPage() {
                     <li>Track student submissions directly</li>
                   </ul>
                   <Button 
-                    onClick={() => setStep(2)} 
+                    onClick={() => setStep(2)}
                     className="w-full"
-                    disabled={skipCanvasMutation.isPending}
                   >
                     Set Up Canvas Integration
                     <ChevronRight className="ml-2 h-4 w-4" />
@@ -186,7 +176,7 @@ export default function CanvasIntegrationPage() {
                   </p>
                   <Button
                     variant="outline"
-                    onClick={handleSkip}
+                    onClick={() => skipCanvasMutation.mutate()}
                     disabled={skipCanvasMutation.isPending}
                     className="w-full"
                   >
@@ -311,13 +301,6 @@ export default function CanvasIntegrationPage() {
                   <div className="flex items-center justify-center h-40">
                     <Loader2 className="h-8 w-8 animate-spin" />
                   </div>
-                ) : coursesError ? (
-                  <div className="mt-4 p-4 border border-red-200 rounded-lg bg-red-50">
-                    <h3 className="text-red-700 font-semibold">Canvas Connection Error</h3>
-                    <p className="text-red-600">
-                      {coursesError instanceof Error ? coursesError.message : "Failed to connect to Canvas"}
-                    </p>
-                  </div>
                 ) : courses.length > 0 ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 text-green-600">
@@ -364,7 +347,7 @@ export default function CanvasIntegrationPage() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={handleSkip}
+                        onClick={() => skipCanvasMutation.mutate()}
                         className="flex-1"
                       >
                         Skip for Now
