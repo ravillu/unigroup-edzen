@@ -70,7 +70,7 @@ export default function CanvasIntegrationPage() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to skip Canvas integration. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -143,7 +143,7 @@ export default function CanvasIntegrationPage() {
                     <li>Create assignments that appear in Canvas</li>
                     <li>Track student submissions directly</li>
                   </ul>
-                  <Button 
+                  <Button
                     onClick={() => setStep(2)}
                     className="w-full"
                   >
