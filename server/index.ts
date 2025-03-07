@@ -37,22 +37,21 @@ app.use((req, res, next) => {
   next();
 });
 
-const startServer = async () => {
+(async () => {
   try {
     // Initialize database first
     log("Initializing database connection...");
     await initializeDatabase();
     log("Database connection established successfully");
 
-    // Setup routes and create HTTP server
     const server = await registerRoutes(app);
 
-    // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
-      console.error('Server error:', err);
+
       res.status(status).json({ message });
+      throw err;
     });
 
     // Setup vite or serve static files
@@ -69,24 +68,10 @@ const startServer = async () => {
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
-      log(`Server started successfully, listening on port ${port}`);
+      log(`serving on port ${port}`);
     });
-
-    // Handle server errors
-    server.on('error', (error: any) => {
-      if (error.code === 'EADDRINUSE') {
-        console.error(`Port ${port} is already in use. Please try a different port or kill the process using this port.`);
-      } else {
-        console.error('Server error:', error);
-      }
-      process.exit(1);
-    });
-
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
   }
-};
-
-// Start the server
-startServer();
+})();
