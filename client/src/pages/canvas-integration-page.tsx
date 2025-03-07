@@ -1,37 +1,37 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ChevronRight } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function CanvasIntegrationPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const { user } = useAuth();
-
-  // If user already has Canvas setup skipped, redirect to home
-  useEffect(() => {
-    if (user?.canvasSetupSkipped) {
-      window.location.href = "/";
-    }
-  }, [user]);
+  const [, setLocation] = useLocation();
 
   const skipCanvasMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("PATCH", "/api/user/skip-canvas");
       if (!res.ok) {
-        const error = await res.json().catch(() => ({ message: "Failed to skip Canvas integration" }));
-        throw new Error(error.message || "Failed to skip Canvas integration");
+        throw new Error("Failed to skip Canvas integration");
       }
       return res.json();
     },
     onSuccess: () => {
-      // Simple approach: Just redirect to home
-      window.location.href = "/";
+      // Update user data in cache to reflect skipped state
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+
+      toast({
+        title: "Canvas Integration Skipped",
+        description: "You can set this up later from your dashboard settings.",
+      });
+
+      // Use setLocation for client-side routing
+      setLocation("/");
     },
     onError: (error: Error) => {
       toast({
