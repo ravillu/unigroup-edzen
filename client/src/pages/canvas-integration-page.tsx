@@ -5,13 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function CanvasIntegrationPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const { user } = useAuth();
 
   const skipCanvasMutation = useMutation({
     mutationFn: async () => {
@@ -39,10 +37,8 @@ export default function CanvasIntegrationPage() {
   });
 
   const handleCanvasSetup = () => {
-    // Use canvas.instructure.com for test accounts
-    const institution_id = 1;  // Test institution ID
-    const redirectUrl = `/api/auth/canvas?institution_id=${institution_id}&canvas_url=canvas.instructure.com`;
-    window.location.href = redirectUrl;
+    // Use test Canvas instance
+    window.location.href = "/api/auth/canvas?institution_id=1";
   };
 
   return (

@@ -55,21 +55,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Canvas OAuth routes
   app.get("/api/auth/canvas", async (req, res) => {
     try {
-      const { institution_id, canvas_url } = req.query;
+      const { institution_id } = req.query;
 
       if (!institution_id) {
         return res.status(400).json({ message: "Institution ID is required" });
       }
 
-      const institutionId = parseInt(institution_id as string);
+      // For test Canvas instance
       const institution = {
-        id: institutionId,
-        name: "Test Institution", // This should ideally be fetched from the database
-        canvasInstanceUrl: canvas_url as string || "canvas.instructure.com"
+        id: parseInt(institution_id as string),
+        name: "Test Institution",
+        canvasInstanceUrl: "canvas.instructure.com",
+        canvasClientId: process.env.CANVAS_CLIENT_ID || "test_client_id",
+        canvasClientSecret: process.env.CANVAS_CLIENT_SECRET || "test_client_secret",
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
 
       const authService = createCanvasAuthService(institution);
-      const authUrl = authService.getAuthorizationUrl(institutionId.toString());
+      const authUrl = authService.getAuthorizationUrl(institution_id as string);
       res.redirect(authUrl);
     } catch (error) {
       console.error('Canvas auth error:', error);
@@ -233,8 +237,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedUser);
     } catch (error) {
       console.error('Failed to update Canvas credentials:', error);
-      res.status(400).json({ 
-        message: error instanceof Error ? error.message : "Failed to update Canvas credentials" 
+      res.status(400).json({
+        message: error instanceof Error ? error.message : "Failed to update Canvas credentials"
       });
     }
   });
@@ -256,8 +260,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedUser);
     } catch (error) {
       console.error('Failed to skip Canvas setup:', error);
-      res.status(400).json({ 
-        message: error instanceof Error ? error.message : "Failed to skip Canvas setup" 
+      res.status(400).json({
+        message: error instanceof Error ? error.message : "Failed to skip Canvas setup"
       });
     }
   });
