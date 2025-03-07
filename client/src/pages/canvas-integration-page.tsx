@@ -53,6 +53,33 @@ export default function CanvasIntegrationPage() {
     resolver: zodResolver(canvasConfigSchema),
   });
 
+  const skipCanvasMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("PATCH", "/api/user/skip-canvas", {});
+      if (!res.ok) throw new Error("Failed to skip Canvas integration");
+      return res.json();
+    },
+    onSuccess: async () => {
+      // Invalidate user query first
+      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+
+      toast({
+        title: "Canvas Integration Skipped",
+        description: "You can set this up later from your dashboard settings.",
+      });
+
+      // Force redirect to dashboard
+      window.location.href = "/";
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to skip Canvas integration. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const updateCanvasCredentialsMutation = useMutation({
     mutationFn: async (values: CanvasConfigForm) => {
       const res = await apiRequest("PATCH", "/api/user/canvas", values);
@@ -86,32 +113,8 @@ export default function CanvasIntegrationPage() {
     updateCanvasCredentialsMutation.mutate(data);
   });
 
-  const handleSkip = async () => {
-    try {
-      // Skip Canvas integration
-      const res = await apiRequest("PATCH", "/api/user/skip-canvas", {});
-      if (!res.ok) {
-        throw new Error("Failed to skip Canvas integration");
-      }
-
-      // Invalidate user query to refresh the state
-      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-
-      toast({
-        title: "Canvas Integration Skipped",
-        description: "You can set this up later from your dashboard settings.",
-      });
-
-      // Redirect to dashboard
-      setLocation("/");
-
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to skip Canvas integration. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleSkip = () => {
+    skipCanvasMutation.mutate();
   };
 
   return (
@@ -149,7 +152,11 @@ export default function CanvasIntegrationPage() {
                     <li>Create assignments that appear in Canvas</li>
                     <li>Track student submissions directly</li>
                   </ul>
-                  <Button onClick={() => setStep(2)} className="w-full">
+                  <Button 
+                    onClick={() => setStep(2)} 
+                    className="w-full"
+                    disabled={skipCanvasMutation.isPending}
+                  >
                     Set Up Canvas Integration
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -180,9 +187,17 @@ export default function CanvasIntegrationPage() {
                   <Button
                     variant="outline"
                     onClick={handleSkip}
+                    disabled={skipCanvasMutation.isPending}
                     className="w-full"
                   >
-                    Skip for Now
+                    {skipCanvasMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Skipping...
+                      </>
+                    ) : (
+                      "Skip for Now"
+                    )}
                   </Button>
                 </div>
               </CardContent>
