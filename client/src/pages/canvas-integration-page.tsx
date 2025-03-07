@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function CanvasIntegrationPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const { user } = useAuth();
 
   const skipCanvasMutation = useMutation({
     mutationFn: async () => {
@@ -37,8 +39,9 @@ export default function CanvasIntegrationPage() {
   });
 
   const handleCanvasSetup = () => {
-    // Redirect to the Canvas OAuth flow
-    window.location.href = "/api/auth/canvas";
+    // For now, hardcode Northeastern as the institution ID
+    const institutionId = 1;  // Northeastern University's ID
+    window.location.href = `/api/auth/canvas?institution_id=${institutionId}`;
   };
 
   return (
