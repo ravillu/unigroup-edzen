@@ -15,7 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PageLayout } from "@/components/layout/page-layout";
-import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface FormQuestion {
   id: number;
@@ -162,12 +162,27 @@ export default function GroupViewPage() {
     return stats;
   };
 
-  const formatSkillsForRadar = (skills: Record<string, number>) => {
-    return Object.entries(skills).map(([name, value]) => ({
-      skill: name,
-      value: value
-    }));
+  // Replace formatSkillsForRadar with new formatting function
+  const formatGroupSkills = (groups: Group[]) => {
+    const skillData: Record<string, { name: string; [key: string]: number | string }> = {};
+
+    groups.forEach((group, index) => {
+      const groupStudents = students.filter(student => group.studentIds.includes(student.id));
+      const stats = calculateGroupStats(groupStudents);
+
+      if (stats) {
+        Object.entries(stats.avgSkills).forEach(([skill, value]) => {
+          if (!skillData[skill]) {
+            skillData[skill] = { name: skill };
+          }
+          skillData[skill][`Group ${index + 1}`] = Math.round(value * 10) / 10;
+        });
+      }
+    });
+
+    return Object.values(skillData);
   };
+
 
   // Show loading state while initial data is being fetched
   if (formLoading || studentsLoading || groupsLoading) {
@@ -322,33 +337,20 @@ export default function GroupViewPage() {
                       </CardTitle>
                       {stats && (
                         <CardDescription>
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-                            <div className="h-[300px]">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <RadarChart data={formatSkillsForRadar(stats.avgSkills)}>
-                                  <PolarGrid />
-                                  <PolarAngleAxis dataKey="skill" />
-                                  <PolarRadiusAxis domain={[0, 5]} />
-                                  <Radar
-                                    name="Skills"
-                                    dataKey="value"
-                                    stroke="hsl(var(--primary))"
-                                    fill="hsl(var(--primary))"
-                                    fillOpacity={0.3}
-                                  />
-                                  <Tooltip />
-                                </RadarChart>
-                              </ResponsiveContainer>
-                            </div>
-                            <div>
-                              <h4 className="font-medium mb-2">Demographics</h4>
-                              <div className="space-y-2">
+                          <div className="space-y-4 mt-4">
+                            <h4 className="font-medium">Demographics</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <h5 className="text-sm font-medium mb-2">Gender Distribution</h5>
                                 {Object.entries(stats.genderBalance).map(([gender, count]) => (
                                   <div key={gender} className="flex justify-between text-sm">
                                     <span>{gender}:</span>
                                     <span>{count}</span>
                                   </div>
                                 ))}
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-medium mb-2">Ethnicity Distribution</h5>
                                 {Object.entries(stats.ethnicityCount).map(([ethnicity, count]) => (
                                   <div key={ethnicity} className="flex justify-between text-sm">
                                     <span>{ethnicity}:</span>
@@ -444,6 +446,37 @@ export default function GroupViewPage() {
               })}
             </div>
           </DragDropContext>
+        )}
+
+        {groups.length > 0 && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>Group Skill Comparison</CardTitle>
+              <CardDescription>
+                Average skill levels across all groups. Each bar represents a group's average score for each skill.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px] mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={formatGroupSkills(groups)} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis domain={[0, 5]} />
+                    <Tooltip />
+                    <Legend />
+                    {groups.map((_, index) => (
+                      <Bar
+                        key={index}
+                        dataKey={`Group ${index + 1}`}
+                        fill={`hsl(${index * (360 / groups.length)}, 70%, 50%)`}
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </PageLayout>
