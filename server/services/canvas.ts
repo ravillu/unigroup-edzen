@@ -22,75 +22,83 @@ class CanvasService {
     this.apiToken = user.canvasToken;
 
     // Clean and format the base URL
-    this.baseUrl = user.canvasInstanceUrl.replace(/\/$/, ''); // Remove trailing slash
-    if (!this.baseUrl.startsWith('http')) {
-      this.baseUrl = `https://${this.baseUrl}`;
+    let baseUrl = user.canvasInstanceUrl.trim();
+    // Remove trailing slashes
+    baseUrl = baseUrl.replace(/\/+$/, '');
+    // Ensure https:// prefix
+    if (!/^https?:\/\//i.test(baseUrl)) {
+      baseUrl = `https://${baseUrl}`;
     }
+    this.baseUrl = baseUrl;
 
     console.log('Canvas Service Configuration:', {
       hasToken: !!this.apiToken,
-      baseUrl: this.baseUrl
+      baseUrl: this.baseUrl,
+      tokenLength: this.apiToken?.length
     });
   }
 
   private async request(endpoint: string) {
     try {
-      const url = `${this.baseUrl}/api/v1/${endpoint.replace(/^\//, '')}`;
+      // Ensure endpoint starts with a forward slash
+      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      const url = `${this.baseUrl}/api/v1${cleanEndpoint}`;
+
       console.log('Making Canvas API request to:', url);
 
-      const response = await axios.get(url, {
+      const response = await axios({
+        method: 'get',
+        url,
         headers: {
           'Authorization': `Bearer ${this.apiToken}`,
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        validateStatus: (status) => status < 500 // Don't throw on 4xx errors
+        validateStatus: null // Don't throw on any status code
       });
 
-      // Check if response is HTML (error page)
-      const contentType = response.headers['content-type'];
-      if (contentType && contentType.includes('text/html')) {
-        throw new Error('Invalid response from Canvas API. Please check your Canvas instance URL.');
+      // Log response details for debugging
+      console.log('Canvas API Response:', {
+        status: response.status,
+        contentType: response.headers['content-type'],
+        isHtml: response.headers['content-type']?.includes('text/html'),
+        data: typeof response.data
+      });
+
+      // Check for HTML response
+      if (response.headers['content-type']?.includes('text/html')) {
+        throw new Error(`Received HTML instead of JSON. Please verify your Canvas URL: ${this.baseUrl}`);
       }
 
-      // Handle 4xx errors
+      // Handle error status codes
       if (response.status >= 400) {
-        throw new Error(response.data.message || 'Canvas API request failed');
+        throw new Error(response.data?.message || `Canvas API error (${response.status})`);
       }
 
       return response.data;
     } catch (error: any) {
       console.error('Canvas API Error:', {
         message: error.message,
-        response: error.response?.data,
-        endpoint,
+        status: error.response?.status,
+        contentType: error.response?.headers?.['content-type'],
+        data: error.response?.data
       });
 
       if (error.response?.status === 401) {
-        throw new Error(
-          "Invalid Canvas API token. Please check your token and try again."
-        );
+        throw new Error("Invalid Canvas API token. Please check your token and try again.");
       } else if (error.response?.status === 404) {
-        throw new Error(
-          "Could not connect to Canvas. Please verify your Canvas instance URL."
-        );
+        throw new Error("Could not connect to Canvas. Please verify your Canvas instance URL.");
       } else if (error.message.includes('text/html')) {
-        throw new Error(
-          "Invalid Canvas instance URL. Please ensure you're using the correct Canvas domain."
-        );
+        throw new Error("Received HTML response. Please ensure you're using the correct Canvas API URL.");
       } else {
-        throw new Error(
-          `Canvas API error: ${error.response?.data?.message || error.message}`
-        );
+        throw new Error(`Canvas API error: ${error.response?.data?.message || error.message}`);
       }
     }
   }
 
   async getCourses() {
     try {
-      const courses = await this.request(
-        'courses?enrollment_type=teacher&include[]=total_students&per_page=100'
-      );
+      const courses = await this.request('/courses?enrollment_type=teacher&include[]=total_students&per_page=100');
 
       if (!Array.isArray(courses)) {
         throw new Error("Unexpected response format from Canvas API");
@@ -106,7 +114,7 @@ class CanvasService {
   async getCourseStudents(courseId: number) {
     try {
       const students = await this.request(
-        `courses/${courseId}/users?enrollment_type[]=student&per_page=100&include[]=email&include[]=enrollments`
+        `/courses/${courseId}/users?enrollment_type[]=student&per_page=100&include[]=email&include[]=enrollments`
       );
       return students;
     } catch (error) {
@@ -118,24 +126,28 @@ class CanvasService {
   async createAssignment(courseId: number, options: AssignmentOptions) {
     try {
       const url = `${this.baseUrl}/api/v1/courses/${courseId}/assignments`;
-      const response = await axios.post(
+      const response = await axios({
+        method: 'post',
         url,
-        {
+        headers: {
+          'Authorization': `Bearer ${this.apiToken}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        data: {
           assignment: {
             name: options.name,
             description: options.description,
             submission_types: options.submission_types,
             published: options.published
           }
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiToken}`,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
         }
-      );
+      });
+
+      if (response.status >= 400) {
+        throw new Error(response.data?.message || 'Failed to create assignment');
+      }
+
       return response.data;
     } catch (error: any) {
       console.error(`Failed to create assignment in course ${courseId}:`, error);
