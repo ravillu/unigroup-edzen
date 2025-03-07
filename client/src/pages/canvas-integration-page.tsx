@@ -4,21 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ChevronRight } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-
-interface CanvasCourse {
-  id: number;
-  name: string;
-  total_students: number;
-}
+import { apiRequest } from "@/lib/queryClient";
 
 export default function CanvasIntegrationPage() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
   const [step, setStep] = useState(1);
   const { user } = useAuth();
+
+  // If user already has Canvas setup skipped, redirect to home
+  useEffect(() => {
+    if (user?.canvasSetupSkipped) {
+      window.location.href = "/";
+    }
+  }, [user]);
 
   const skipCanvasMutation = useMutation({
     mutationFn: async () => {
@@ -27,20 +27,10 @@ export default function CanvasIntegrationPage() {
         const error = await res.json().catch(() => ({ message: "Failed to skip Canvas integration" }));
         throw new Error(error.message || "Failed to skip Canvas integration");
       }
-      return await res.json();
+      return res.json();
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], (oldData: any) => ({
-        ...oldData,
-        canvasSetupSkipped: true
-      }));
-
-      toast({
-        title: "Canvas Integration Skipped",
-        description: "You can set this up later from your dashboard settings.",
-      });
-
-      // Navigate to dashboard
+      // Simple approach: Just redirect to home
       window.location.href = "/";
     },
     onError: (error: Error) => {
@@ -51,13 +41,6 @@ export default function CanvasIntegrationPage() {
       });
     }
   });
-
-  // Ensure redirect to dashboard if user has already skipped Canvas setup
-  useEffect(() => {
-    if (user?.canvasSetupSkipped) {
-      window.location.href = "/";
-    }
-  }, [user]);
 
   return (
     <div className="min-h-screen bg-background">
