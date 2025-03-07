@@ -64,7 +64,7 @@ async function startServer() {
     }
 
     // Start server
-    const port = process.env.PORT || 5000;
+    const port = process.env.PORT || 5001; // Changed default port to 5001
 
     await new Promise((resolve, reject) => {
       server.listen({
@@ -83,7 +83,7 @@ async function startServer() {
 
   } catch (error: any) {
     if (error.code === 'EADDRINUSE') {
-      log(`Error: Port ${process.env.PORT || 5000} is already in use`);
+      log(`Error: Port ${process.env.PORT || 5001} is already in use`);
       log('Please ensure no other instances of the application are running');
       process.exit(1);
     } else {
