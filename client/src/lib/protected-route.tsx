@@ -40,8 +40,8 @@ export function ProtectedRoute({
     );
   }
 
-  // Redirect to Canvas setup if required and user doesn't have Canvas token
-  if (requireCanvasSetup && !user.canvasToken && path !== "/canvas") {
+  // If Canvas setup is required but user doesn't have Canvas token and hasn't skipped setup
+  if (requireCanvasSetup && !user.canvasToken && !user.canvasSetupSkipped && path !== "/canvas") {
     return (
       <Route path={path}>
         <Redirect to="/canvas" />
