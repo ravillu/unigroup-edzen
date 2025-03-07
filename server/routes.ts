@@ -61,6 +61,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Institution ID is required" });
       }
 
+      // Validate environment variables
+      if (!process.env.CANVAS_CLIENT_ID || !process.env.CANVAS_CLIENT_SECRET) {
+        console.error('Missing Canvas credentials:', {
+          clientId: !!process.env.CANVAS_CLIENT_ID,
+          clientSecret: !!process.env.CANVAS_CLIENT_SECRET
+        });
+        return res.status(500).json({ message: "Canvas integration is not properly configured" });
+      }
+
       // Test institution setup for Canvas.instructure.com
       const testInstitution = {
         id: parseInt(institution_id as string),
@@ -72,12 +81,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updatedAt: new Date()
       };
 
+      console.log('Creating Canvas auth service with:', {
+        instanceUrl: testInstitution.canvasInstanceUrl,
+        hasClientId: !!testInstitution.canvasClientId,
+        hasClientSecret: !!testInstitution.canvasClientSecret
+      });
+
       const authService = createCanvasAuthService(testInstitution);
-      const authUrl = authService.getAuthorizationUrl();
+      const state = institution_id as string;
+      const authUrl = authService.getAuthorizationUrl(state);
+
+      console.log('Redirecting to Canvas auth URL:', authUrl);
       res.redirect(authUrl);
     } catch (error) {
       console.error('Canvas auth error:', error);
-      res.redirect('/canvas?error=canvas_auth_failed');
+      res.redirect('/canvas?error=' + encodeURIComponent(error instanceof Error ? error.message : 'Canvas auth failed'));
     }
   });
 
@@ -375,7 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(groups);
     } catch (error) {
       console.error('Error generating groups:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: error instanceof Error ? error.message : "Failed to generate groups"
       });
     }
@@ -438,7 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Error publishing groups to Canvas:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: error instanceof Error ? error.message : "Failed to publish groups to Canvas"
       });
     }

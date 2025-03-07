@@ -4,7 +4,7 @@ import { Form, Student, Group } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, GripVertical, Upload, Loader2 } from "lucide-react";
+import { RefreshCw, GripVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { PageLayout } from "@/components/layout/page-layout";
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface FormQuestion {
   id: number;
@@ -115,39 +117,6 @@ export default function GroupViewPage() {
     }
   });
 
-  const publishToCanvasMutation = useMutation({
-    mutationFn: async () => {
-      const courseId = 1; 
-
-      const res = await apiRequest(
-        "POST",
-        `/api/forms/${formId}/groups/publish`,
-        { courseId }
-      );
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Failed to publish groups to Canvas');
-      }
-
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Groups have been published to Canvas successfully.",
-      });
-    },
-    onError: (error: Error) => {
-      console.error('Failed to publish groups to Canvas:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to publish groups to Canvas. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
 
@@ -179,8 +148,8 @@ export default function GroupViewPage() {
 
     // Calculate average skills
     groupStudents.forEach(student => {
-      Object.entries(student.skills).forEach(([skill, value]) => {
-        stats.avgSkills[skill] = (stats.avgSkills[skill] || 0) + (value as number);
+      Object.entries(student.skills as Record<string, number>).forEach(([skill, value]) => {
+        stats.avgSkills[skill] = (stats.avgSkills[skill] || 0) + value;
       });
       stats.genderBalance[student.gender] = (stats.genderBalance[student.gender] || 0) + 1;
       stats.ethnicityCount[student.ethnicity] = (stats.ethnicityCount[student.ethnicity] || 0) + 1;
@@ -191,6 +160,13 @@ export default function GroupViewPage() {
     });
 
     return stats;
+  };
+
+  const formatSkillsForRadar = (skills: Record<string, number>) => {
+    return Object.entries(skills).map(([name, value]) => ({
+      skill: name,
+      value: value
+    }));
   };
 
   // Show loading state while initial data is being fetched
@@ -227,10 +203,10 @@ export default function GroupViewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto">
+    <PageLayout>
+      <div className="space-y-8">
         {/* Form header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">{form?.title}</h1>
             {form?.description && (
@@ -314,24 +290,6 @@ export default function GroupViewPage() {
                 <RefreshCw className={`mr-2 h-4 w-4 ${generateGroupsMutation.isPending ? 'animate-spin' : ''}`} />
                 {generateGroupsMutation.isPending ? 'Generating Groups...' : 'Generate Groups'}
               </Button>
-              <Button
-                onClick={() => publishToCanvasMutation.mutate()}
-                disabled={publishToCanvasMutation.isPending || groups.length === 0}
-                variant="outline"
-                className="ml-4"
-              >
-                {publishToCanvasMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Publishing to Canvas...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Publish to Canvas
-                  </>
-                )}
-              </Button>
 
               {groups.length > 0 && (
                 <p className="text-sm text-muted-foreground mt-2">
@@ -363,24 +321,41 @@ export default function GroupViewPage() {
                         </Badge>
                       </CardTitle>
                       {stats && (
-                        <CardDescription className="mt-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                            <div>
-                              <p className="font-medium mb-1">Average Skills</p>
-                              {Object.entries(stats.avgSkills).map(([skill, avg]) => (
-                                <div key={skill} className="flex justify-between text-sm">
-                                  <span>{skill}:</span>
-                                  <span className="font-mono">{avg}</span>
-                                </div>
-                              ))}
+                        <CardDescription>
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                            <div className="h-[300px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <RadarChart data={formatSkillsForRadar(stats.avgSkills)}>
+                                  <PolarGrid />
+                                  <PolarAngleAxis dataKey="skill" />
+                                  <PolarRadiusAxis domain={[0, 5]} />
+                                  <Radar
+                                    name="Skills"
+                                    dataKey="value"
+                                    stroke="hsl(var(--primary))"
+                                    fill="hsl(var(--primary))"
+                                    fillOpacity={0.3}
+                                  />
+                                  <Tooltip />
+                                </RadarChart>
+                              </ResponsiveContainer>
                             </div>
                             <div>
-                              <p className="font-medium mb-1">Demographics</p>
-                              {Object.entries(stats.genderBalance).map(([gender, count]) => (
-                                <div key={gender} className="text-sm">
-                                  {gender}: {count}
-                                </div>
-                              ))}
+                              <h4 className="font-medium mb-2">Demographics</h4>
+                              <div className="space-y-2">
+                                {Object.entries(stats.genderBalance).map(([gender, count]) => (
+                                  <div key={gender} className="flex justify-between text-sm">
+                                    <span>{gender}:</span>
+                                    <span>{count}</span>
+                                  </div>
+                                ))}
+                                {Object.entries(stats.ethnicityCount).map(([ethnicity, count]) => (
+                                  <div key={ethnicity} className="flex justify-between text-sm">
+                                    <span>{ethnicity}:</span>
+                                    <span>{count}</span>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           </div>
                         </CardDescription>
@@ -471,6 +446,6 @@ export default function GroupViewPage() {
           </DragDropContext>
         )}
       </div>
-    </div>
+    </PageLayout>
   );
 }
