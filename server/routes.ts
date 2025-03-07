@@ -55,14 +55,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Canvas OAuth routes
   app.get("/api/auth/canvas", async (req, res) => {
     try {
-      // For initial login flow, we'll use a default institution
-      // The actual institution will be set during the callback
-      const institution = await storage.getInstitutions()[0];
+      // For initial login flow, get all institutions and use the first one
+      const [institution] = await storage.getAllInstitutions();
 
       if (!institution) {
-        return res.status(404).json({ message: "No institution found" });
+        console.error('No institution found for Canvas auth');
+        return res.redirect('/auth?error=no_institution');
       }
 
+      console.log('Initiating Canvas OAuth flow:', { institutionId: institution.id });
       const authService = createCanvasAuthService(institution);
       const authUrl = authService.getAuthorizationUrl(institution.id.toString());
       res.redirect(authUrl);
@@ -127,6 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.redirect('/auth?error=login_failed');
           return;
         }
+        console.log('Canvas OAuth successful, redirecting user:', { id: user.id, hasCanvasToken: !!user.canvasToken });
         res.redirect('/');
       });
     } catch (error) {
