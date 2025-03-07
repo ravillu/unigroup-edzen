@@ -152,10 +152,13 @@ export class DatabaseStorage {
     const studentScores = students.map(student => {
       let skillScore = 0;
       let maxSkill = 0;
-      let keySkills = new Set<string>();
+      const keySkills = new Set<string>();
+
+      // Ensure skills is properly typed
+      const studentSkills = student.skills as Record<string, number>;
 
       for (const [skill, priority] of Object.entries(skillPriorities)) {
-        const skillLevel = (student.skills as any)[skill] || 0;
+        const skillLevel = studentSkills[skill] || 0;
         skillScore += skillLevel * priority;
         if (skillLevel >= 4) {
           maxSkill = Math.max(maxSkill, skillLevel);
@@ -167,7 +170,7 @@ export class DatabaseStorage {
         student,
         skillScore,
         maxSkill,
-        keySkills,
+        keySkills: Array.from(keySkills), // Convert Set to Array to avoid iteration issues
         attributes: {
           gender: student.gender,
           ethnicity: student.ethnicity,
@@ -199,7 +202,7 @@ export class DatabaseStorage {
         nunCount: number;
         yearCount: Record<string, number>;
         skillLevels: Record<string, number>;
-        keySkills: Set<string>;
+        keySkills: string[]; // Use array instead of Set
       }
     }[] = Array(numGroups).fill(null).map((_, i) => ({
       studentIds: [],
@@ -210,7 +213,7 @@ export class DatabaseStorage {
         nunCount: 0,
         yearCount: {},
         skillLevels: {},
-        keySkills: new Set()
+        keySkills: []
       }
     }));
 
@@ -246,15 +249,16 @@ export class DatabaseStorage {
 
         // Skill distribution - ensure key skills are spread across groups
         for (const skill of student.keySkills) {
-          if (!group.metrics.keySkills.has(skill)) {
+          if (!group.metrics.keySkills.includes(skill)) {
             score += 5; // Bonus for adding a missing key skill
           }
         }
 
         // Average skill levels
+        const studentSkills = student.student.skills as Record<string, number>;
         for (const [skill, priority] of Object.entries(skillPriorities)) {
           const currentAvg = group.metrics.skillLevels[skill] || 0;
-          const newSkillLevel = (student.student.skills as any)[skill] || 0;
+          const newSkillLevel = studentSkills[skill] || 0;
           const newAvg = (currentAvg * group.studentIds.length + newSkillLevel) / (group.studentIds.length + 1);
           score += (5 - Math.abs(3.5 - newAvg)) * priority;
         }
@@ -286,16 +290,15 @@ export class DatabaseStorage {
         (group.metrics.yearCount[studentData.attributes.academicYear] || 0) + 1;
 
       // Update skill metrics
-      for (const [skill, level] of Object.entries(studentData.student.skills as Record<string, number>)) {
+      const studentSkills = studentData.student.skills as Record<string, number>;
+      for (const [skill, level] of Object.entries(studentSkills)) {
         group.metrics.skillLevels[skill] = group.metrics.skillLevels[skill] || 0;
         group.metrics.skillLevels[skill] = 
           (group.metrics.skillLevels[skill] * (group.studentIds.length - 1) + level) / group.studentIds.length;
       }
 
-      // Add key skills
-      for (const skill of studentData.keySkills) {
-        group.metrics.keySkills.add(skill);
-      }
+      // Add key skills (using array methods instead of Set)
+      group.metrics.keySkills = [...new Set([...group.metrics.keySkills, ...studentData.keySkills])];
     }
 
     // Create groups in database

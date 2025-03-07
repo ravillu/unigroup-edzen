@@ -4,7 +4,7 @@ import { Form, Student, Group } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, GripVertical, UserCog } from "lucide-react";
+import { RefreshCw, GripVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,11 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+
+interface FormQuestion {
+  id: number;
+  text: string;
+}
 
 export default function GroupViewPage() {
   const { id } = useParams<{ id: string }>();
@@ -49,13 +54,16 @@ export default function GroupViewPage() {
 
   const generateGroupsMutation = useMutation({
     mutationFn: async () => {
+      if (!form?.questions) {
+        throw new Error('Form questions not loaded');
+      }
+
       const payload = {
         groupSize,
         skillPriorities: Object.fromEntries(
-          form?.questions.map((q: any) => [q.text, skillPriorities[q.text] || 1]) || []
+          (form.questions as FormQuestion[]).map(q => [q.text, skillPriorities[q.text] || 1])
         )
       };
-      console.log('Generating groups with payload:', payload);
 
       const res = await apiRequest(
         "POST",
@@ -64,9 +72,8 @@ export default function GroupViewPage() {
       );
 
       if (!res.ok) {
-        const errorText = await res.text();
-        console.error('Group generation failed:', errorText);
-        throw new Error('Failed to generate groups');
+        const errorData = await res.json().catch(() => ({ message: 'Failed to generate groups' }));
+        throw new Error(errorData.message || 'Failed to generate groups');
       }
 
       return res.json();
@@ -78,11 +85,11 @@ export default function GroupViewPage() {
         description: "Groups have been generated successfully.",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Failed to generate groups:', error);
       toast({
         title: "Error",
-        description: "Failed to generate groups. Please try again.",
+        description: error.message || "Failed to generate groups. Please try again.",
         variant: "destructive",
       });
     }
@@ -220,8 +227,8 @@ export default function GroupViewPage() {
               <div>
                 <Label>Group Size</Label>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <Input 
-                    type="number" 
+                  <Input
+                    type="number"
                     value={groupSize}
                     onChange={(e) => setGroupSize(parseInt(e.target.value))}
                     min={3}
@@ -237,7 +244,7 @@ export default function GroupViewPage() {
                 <p className="text-sm text-muted-foreground -mt-2">
                   Set the importance of each skill (1 = least important, 5 = most important)
                 </p>
-                {form?.questions.map((question: any) => (
+                {form?.questions.map((question: FormQuestion) => (
                   <div key={question.id} className="grid gap-2">
                     <Label>{question.text}</Label>
                     <RadioGroup
@@ -272,7 +279,7 @@ export default function GroupViewPage() {
 
               {groups.length > 0 && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  <UserCog className="inline-block mr-2 h-4 w-4" />
+                  <GripVertical className="inline-block mr-2 h-4 w-4" />
                   Tip: Drag and drop students between groups to make manual adjustments
                 </p>
               )}
@@ -340,7 +347,7 @@ export default function GroupViewPage() {
                                   <TableHead className="w-4"></TableHead>
                                   <TableHead>Name</TableHead>
                                   <TableHead>Demographics</TableHead>
-                                  {form?.questions.map((q: any) => (
+                                  {form?.questions.map((q: FormQuestion) => (
                                     <TableHead key={q.id}>{q.text}</TableHead>
                                   ))}
                                 </TableRow>
@@ -380,13 +387,13 @@ export default function GroupViewPage() {
                                             {student.nunStatus}
                                           </div>
                                         </TableCell>
-                                        {form?.questions.map((q: any) => (
+                                        {form?.questions.map((q: FormQuestion) => (
                                           <TableCell key={q.id} className="font-mono">
-                                            <Badge 
-                                              variant={(student.skills as any)[q.text] >= 4 ? "default" : "secondary"}
+                                            <Badge
+                                              variant={student.skills[q.text] >= 4 ? "default" : "secondary"}
                                               className="w-8 h-8 rounded-full"
                                             >
-                                              {(student.skills as any)[q.text]}
+                                              {student.skills[q.text]}
                                             </Badge>
                                           </TableCell>
                                         ))}
