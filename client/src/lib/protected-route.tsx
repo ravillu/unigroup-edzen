@@ -5,11 +5,9 @@ import { Redirect, Route } from "wouter";
 export function ProtectedRoute({
   path,
   component: Component,
-  requireCanvasSetup = false,
 }: {
   path: string;
   component: () => React.JSX.Element;
-  requireCanvasSetup?: boolean;
 }) {
   const { user, isLoading } = useAuth();
 
@@ -27,15 +25,6 @@ export function ProtectedRoute({
     return (
       <Route path={path}>
         <Redirect to="/auth" />
-      </Route>
-    );
-  }
-
-  // User is on canvas page but has already completed or skipped setup
-  if (path === "/canvas" && (user.canvasToken || user.canvasSetupSkipped)) {
-    return (
-      <Route path={path}>
-        <Redirect to="/" />
       </Route>
     );
   }
